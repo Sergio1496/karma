@@ -1,0 +1,11 @@
+pub mod assets;
+pub mod cli;
+pub mod config;
+pub mod components;
+pub mod pipeline;
+pub mod filemerge;
+pub mod backup;
+pub mod state;
+pub mod analyzer;
+pub mod remote;
+pub mod tui;

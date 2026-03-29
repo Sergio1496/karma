@@ -1,0 +1,16 @@
+/target
+*.exe
+*.pdb
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local settings (not the project .claude/)
+.claude/settings.local.json
