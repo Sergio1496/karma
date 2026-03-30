@@ -119,9 +119,9 @@ struct AgentDef {
 
 impl AgentDef {
     /// Render this agent definition as a markdown file with YAML frontmatter.
-    /// The model is resolved from the ModelPreset at render time.
-    fn render(&self, model_preset: &crate::config::types::ModelPreset) -> String {
-        let model = model_preset.model_for_phase(self.id);
+    /// The model is resolved from the Selection at render time.
+    fn render(&self, selection: &crate::config::types::Selection) -> String {
+        let model = selection.model_for_phase(self.id);
         let mut content = String::from("---\n");
         content.push_str(&format!("name: \"{}\"\n", self.name));
         content.push_str(&format!("description: \"{}\"\n", self.description));
@@ -173,7 +173,7 @@ impl Component for AgentsComponent {
                 }
             };
 
-            let content = agent.render(&ctx.selection.model_preset);
+            let content = agent.render(&ctx.selection);
             let result = writer::write_file_atomic_str(&target, &content)
                 .with_context(|| format!("Failed to write agent: {}", target.display()))?;
 
@@ -260,11 +260,20 @@ mod tests {
         assert!(!result.changed);
     }
 
+    fn selection_with_preset(
+        preset: crate::config::types::ModelPreset,
+    ) -> crate::config::types::Selection {
+        crate::config::types::Selection {
+            model_preset: preset,
+            ..Default::default()
+        }
+    }
+
     #[test]
     fn test_agent_render_format() {
-        use crate::config::types::ModelPreset;
         let agent = &ALL_AGENTS[0]; // sdd-explore
-        let content = agent.render(&ModelPreset::Balanced);
+        let sel = selection_with_preset(crate::config::types::ModelPreset::Balanced);
+        let content = agent.render(&sel);
         assert!(content.starts_with("---\n"));
         assert!(content.contains("name:"));
         assert!(content.contains("description:"));
@@ -275,13 +284,16 @@ mod tests {
 
     #[test]
     fn test_agent_model_varies_by_preset() {
-        use crate::config::types::ModelPreset;
         let propose = ALL_AGENTS.iter().find(|a| a.id == "sdd-propose").unwrap();
 
-        let balanced = propose.render(&ModelPreset::Balanced);
+        let balanced = propose.render(&selection_with_preset(
+            crate::config::types::ModelPreset::Balanced,
+        ));
         assert!(balanced.contains("model: opus"));
 
-        let economy = propose.render(&ModelPreset::Economy);
+        let economy = propose.render(&selection_with_preset(
+            crate::config::types::ModelPreset::Economy,
+        ));
         assert!(economy.contains("model: sonnet"));
     }
 
@@ -295,7 +307,7 @@ mod tests {
             ModelPreset::Performance,
             ModelPreset::Economy,
         ] {
-            let content = archive.render(preset);
+            let content = archive.render(&selection_with_preset(*preset));
             assert!(
                 content.contains("model: haiku"),
                 "archive should be haiku in {:?}",

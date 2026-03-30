@@ -71,6 +71,7 @@ fn cmd_install(args: karma::cli::commands::InstallArgs) -> Result<()> {
         skills: args.skill,
         preset,
         model_preset: args.model_preset,
+        custom_models: None,
         scope: args.scope,
         dry_run: args.dry_run,
     };

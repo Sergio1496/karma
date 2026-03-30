@@ -81,6 +81,7 @@ fn render(frame: &mut Frame, state: &AppState) {
     match state.screen {
         Screen::Welcome => screens::welcome::render(frame, area),
         Screen::ModelPresetSelect => screens::model_preset_select::render(frame, area, state),
+        Screen::CustomModelSelect => screens::custom_model_select::render(frame, area, state),
         Screen::PresetSelect => screens::preset_select::render(frame, area, state),
         Screen::ComponentSelect => screens::component_select::render(frame, area, state),
         Screen::SkillSelect => screens::skill_select::render(frame, area, state),
@@ -114,6 +115,28 @@ fn handle_key(state: &mut AppState, key: KeyCode) -> ScreenAction {
             KeyCode::Down => {
                 state.cursor_down();
                 state.model_preset = screens::model_preset_select::preset_at(state.cursor);
+                ScreenAction::Continue
+            }
+            KeyCode::Enter => ScreenAction::Next,
+            KeyCode::Esc => ScreenAction::Back,
+            _ => ScreenAction::Continue,
+        },
+
+        Screen::CustomModelSelect => match key {
+            KeyCode::Up => {
+                state.cursor_up();
+                ScreenAction::Continue
+            }
+            KeyCode::Down => {
+                state.cursor_down();
+                ScreenAction::Continue
+            }
+            KeyCode::Right | KeyCode::Char(' ') => {
+                state.cycle_custom_model_right();
+                ScreenAction::Continue
+            }
+            KeyCode::Left => {
+                state.cycle_custom_model_left();
                 ScreenAction::Continue
             }
             KeyCode::Enter => ScreenAction::Next,

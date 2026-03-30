@@ -1,5 +1,6 @@
 pub mod component_select;
 pub mod confirm;
+pub mod custom_model_select;
 pub mod model_preset_select;
 pub mod optimizer_select;
 pub mod preset_select;

@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::fmt;
 
 use serde::{Deserialize, Serialize};
@@ -156,6 +157,24 @@ impl ModelAlias {
             ModelAlias::Haiku => "haiku",
         }
     }
+
+    /// Cycle to next model (Opus → Sonnet → Haiku → Opus).
+    pub fn next(self) -> Self {
+        match self {
+            ModelAlias::Opus => ModelAlias::Sonnet,
+            ModelAlias::Sonnet => ModelAlias::Haiku,
+            ModelAlias::Haiku => ModelAlias::Opus,
+        }
+    }
+
+    /// Cycle to previous model.
+    pub fn prev(self) -> Self {
+        match self {
+            ModelAlias::Opus => ModelAlias::Haiku,
+            ModelAlias::Sonnet => ModelAlias::Opus,
+            ModelAlias::Haiku => ModelAlias::Sonnet,
+        }
+    }
 }
 
 impl fmt::Display for ModelAlias {
@@ -163,6 +182,27 @@ impl fmt::Display for ModelAlias {
         write!(f, "{}", self.as_str())
     }
 }
+
+/// All agent phases with their descriptions, in display order.
+pub const AGENT_PHASES: &[(&str, &str)] = &[
+    ("sdd-explore", "Analisis del codebase"),
+    ("sdd-propose", "Propuestas de cambios"),
+    ("sdd-spec", "Escritura de specs"),
+    ("sdd-design", "Decisiones de arquitectura"),
+    ("sdd-tasks", "Desglose de tareas"),
+    ("sdd-apply", "Implementacion"),
+    ("sdd-verify", "Verificacion"),
+    ("sdd-archive", "Archivado"),
+    ("code-review", "Code review y analisis de PRs"),
+    ("debugger", "Diagnostico y correccion de bugs"),
+    ("test-writer", "Escritura de tests"),
+    ("docs-writer", "Documentacion"),
+    ("refactor", "Reestructuracion de codigo"),
+    ("searcher", "Busqueda y navegacion"),
+    ("git-ops", "Operaciones Git"),
+    ("planner", "Planificacion de implementacion"),
+    ("default", "Cualquier otra delegacion"),
+];
 
 /// Model assignment preset — controls which model handles each SDD phase.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -174,6 +214,8 @@ pub enum ModelPreset {
     Performance,
     /// Everything Sonnet except archiving (Haiku). Cheapest option.
     Economy,
+    /// User picks model for each agent individually.
+    Custom,
 }
 
 impl ModelPreset {
@@ -182,6 +224,7 @@ impl ModelPreset {
             ModelPreset::Balanced => "Balanced",
             ModelPreset::Performance => "Performance",
             ModelPreset::Economy => "Economy",
+            ModelPreset::Custom => "Custom",
         }
     }
 
@@ -194,129 +237,45 @@ impl ModelPreset {
                 "Opus also handles verification (higher quality, higher cost)"
             }
             ModelPreset::Economy => "Sonnet for everything, Haiku for archiving (lowest cost)",
+            ModelPreset::Custom => "Choose the model for each agent individually",
         }
     }
 
     /// Get the model assignment for a specific agent/phase.
+    /// For Custom preset, returns Sonnet as fallback — use Selection::model_for_phase instead.
     pub fn model_for_phase(&self, phase: &str) -> ModelAlias {
         match self {
             ModelPreset::Balanced => match phase {
-                // SDD phases
                 "sdd-propose" | "sdd-design" => ModelAlias::Opus,
                 "sdd-archive" => ModelAlias::Haiku,
-                // General purpose
                 "code-review" | "debugger" | "refactor" | "planner" => ModelAlias::Opus,
                 "docs-writer" | "searcher" | "git-ops" => ModelAlias::Haiku,
-                // Everything else: sonnet
                 _ => ModelAlias::Sonnet,
             },
             ModelPreset::Performance => match phase {
-                // SDD phases
                 "sdd-propose" | "sdd-design" | "sdd-verify" => ModelAlias::Opus,
                 "sdd-archive" => ModelAlias::Haiku,
-                // General purpose
                 "code-review" | "debugger" | "refactor" | "planner" | "test-writer" => {
                     ModelAlias::Opus
                 }
                 "docs-writer" | "searcher" | "git-ops" => ModelAlias::Haiku,
-                // Everything else: sonnet
                 _ => ModelAlias::Sonnet,
             },
             ModelPreset::Economy => match phase {
                 "sdd-archive" | "docs-writer" | "searcher" | "git-ops" => ModelAlias::Haiku,
                 _ => ModelAlias::Sonnet,
             },
+            // Custom uses Selection::model_for_phase with the custom map
+            ModelPreset::Custom => ModelAlias::Sonnet,
         }
     }
 
     /// All agents/phases in order with their model assignments.
     pub fn all_assignments(&self) -> Vec<(&'static str, &'static str, ModelAlias)> {
-        vec![
-            // SDD workflow
-            (
-                "sdd-explore",
-                "Codebase analysis",
-                self.model_for_phase("sdd-explore"),
-            ),
-            (
-                "sdd-propose",
-                "Change proposals",
-                self.model_for_phase("sdd-propose"),
-            ),
-            (
-                "sdd-spec",
-                "Specification writing",
-                self.model_for_phase("sdd-spec"),
-            ),
-            (
-                "sdd-design",
-                "Architecture decisions",
-                self.model_for_phase("sdd-design"),
-            ),
-            (
-                "sdd-tasks",
-                "Task breakdown",
-                self.model_for_phase("sdd-tasks"),
-            ),
-            (
-                "sdd-apply",
-                "Implementation",
-                self.model_for_phase("sdd-apply"),
-            ),
-            (
-                "sdd-verify",
-                "Verification",
-                self.model_for_phase("sdd-verify"),
-            ),
-            (
-                "sdd-archive",
-                "Archiving",
-                self.model_for_phase("sdd-archive"),
-            ),
-            // General purpose
-            (
-                "code-review",
-                "Code review & PR analysis",
-                self.model_for_phase("code-review"),
-            ),
-            (
-                "debugger",
-                "Bug diagnosis & fixing",
-                self.model_for_phase("debugger"),
-            ),
-            (
-                "test-writer",
-                "Writing tests",
-                self.model_for_phase("test-writer"),
-            ),
-            (
-                "docs-writer",
-                "Documentation",
-                self.model_for_phase("docs-writer"),
-            ),
-            (
-                "refactor",
-                "Code restructuring",
-                self.model_for_phase("refactor"),
-            ),
-            (
-                "searcher",
-                "Search & navigation",
-                self.model_for_phase("searcher"),
-            ),
-            ("git-ops", "Git operations", self.model_for_phase("git-ops")),
-            (
-                "planner",
-                "Implementation planning",
-                self.model_for_phase("planner"),
-            ),
-            // Fallback
-            (
-                "default",
-                "Any other delegation",
-                self.model_for_phase("default"),
-            ),
-        ]
+        AGENT_PHASES
+            .iter()
+            .map(|(id, desc)| (*id, *desc, self.model_for_phase(id)))
+            .collect()
     }
 
     /// Render the assignments as a markdown table for injection into CLAUDE.md.
@@ -326,6 +285,14 @@ impl ModelPreset {
             table.push_str(&format!("| `{}` | {} | **{}** |\n", phase, purpose, model));
         }
         table
+    }
+
+    /// Generate default custom model assignments based on this preset.
+    pub fn default_custom_models(&self) -> Vec<ModelAlias> {
+        AGENT_PHASES
+            .iter()
+            .map(|(id, _)| self.model_for_phase(id))
+            .collect()
     }
 }
 
@@ -346,8 +313,38 @@ pub struct Selection {
     pub skills: Vec<SkillId>,
     pub preset: PresetId,
     pub model_preset: ModelPreset,
+    /// Per-phase model overrides (used when model_preset == Custom).
+    pub custom_models: Option<BTreeMap<String, ModelAlias>>,
     pub scope: ConfigScope,
     pub dry_run: bool,
+}
+
+impl Selection {
+    /// Get the model for a phase, using custom assignments when available.
+    pub fn model_for_phase(&self, phase: &str) -> ModelAlias {
+        if let Some(custom) = &self.custom_models {
+            custom.get(phase).copied().unwrap_or(ModelAlias::Sonnet)
+        } else {
+            self.model_preset.model_for_phase(phase)
+        }
+    }
+
+    /// All assignments resolved through custom or preset.
+    pub fn all_assignments(&self) -> Vec<(&'static str, &'static str, ModelAlias)> {
+        AGENT_PHASES
+            .iter()
+            .map(|(id, desc)| (*id, *desc, self.model_for_phase(id)))
+            .collect()
+    }
+
+    /// Render assignments as markdown table.
+    pub fn render_markdown_table(&self) -> String {
+        let mut table = String::from("| Phase | Purpose | Model |\n|-------|---------|-------|\n");
+        for (phase, purpose, model) in self.all_assignments() {
+            table.push_str(&format!("| `{}` | {} | **{}** |\n", phase, purpose, model));
+        }
+        table
+    }
 }
 
 impl Default for Selection {
@@ -357,6 +354,7 @@ impl Default for Selection {
             skills: vec![],
             preset: PresetId::Recommended,
             model_preset: ModelPreset::Balanced,
+            custom_models: None,
             scope: ConfigScope::User,
             dry_run: false,
         }

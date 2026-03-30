@@ -23,6 +23,11 @@ const PRESETS: &[(ModelPreset, &str, &str)] = &[
         "Economy",
         "Sonnet para todo, Haiku para archivar (menor coste)",
     ),
+    (
+        ModelPreset::Custom,
+        "Custom",
+        "Elige el modelo para cada agente individualmente",
+    ),
 ];
 
 pub fn render(frame: &mut Frame, area: Rect, state: &AppState) {

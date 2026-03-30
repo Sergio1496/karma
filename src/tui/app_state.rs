@@ -1,7 +1,9 @@
 use crate::components::{self, OptimizerAction, OptimizerStatus};
 use crate::config::catalog::{self, SkillCatalog, SkillCategory};
 use crate::config::paths::ClaudePaths;
-use crate::config::types::{ComponentId, ConfigScope, ModelPreset, PresetId, Selection};
+use crate::config::types::{
+    ComponentId, ConfigScope, ModelAlias, ModelPreset, PresetId, Selection, AGENT_PHASES,
+};
 use crate::pipeline::stages::ExecutionResult;
 
 /// Which screen is currently active.
@@ -9,6 +11,7 @@ use crate::pipeline::stages::ExecutionResult;
 pub enum Screen {
     Welcome,
     ModelPresetSelect,
+    CustomModelSelect,
     PresetSelect,
     ComponentSelect,
     SkillSelect,
@@ -40,6 +43,7 @@ pub struct AppState {
     pub cursor: usize,
     pub catalog: SkillCatalog,
     pub execution_result: Option<ExecutionResult>,
+    pub custom_models: Vec<ModelAlias>,
     pub progress_messages: Vec<String>,
     pub should_quit: bool,
 }
@@ -106,6 +110,7 @@ impl AppState {
             scope: ConfigScope::User,
             cursor: 0,
             catalog,
+            custom_models: ModelPreset::Balanced.default_custom_models(),
             execution_result: None,
             progress_messages: Vec::new(),
             should_quit: false,
@@ -135,11 +140,24 @@ impl AppState {
             .map(|(id, _, _, _, _)| id.clone())
             .collect();
 
+        let custom_models = if self.model_preset == ModelPreset::Custom {
+            Some(
+                AGENT_PHASES
+                    .iter()
+                    .zip(self.custom_models.iter())
+                    .map(|((id, _), model)| (id.to_string(), *model))
+                    .collect(),
+            )
+        } else {
+            None
+        };
+
         Selection {
             components,
             skills,
             preset: self.preset,
             model_preset: self.model_preset,
+            custom_models,
             scope: self.scope,
             dry_run: false,
         }
@@ -186,7 +204,14 @@ impl AppState {
         self.cursor = 0;
         self.screen = match self.screen {
             Screen::Welcome => Screen::ModelPresetSelect,
-            Screen::ModelPresetSelect => Screen::ScopeSelect,
+            Screen::ModelPresetSelect => {
+                if self.model_preset == ModelPreset::Custom {
+                    Screen::CustomModelSelect
+                } else {
+                    Screen::ScopeSelect
+                }
+            }
+            Screen::CustomModelSelect => Screen::ScopeSelect,
             Screen::ScopeSelect => Screen::PresetSelect,
             Screen::PresetSelect => {
                 if self.preset == PresetId::Custom {
@@ -215,7 +240,14 @@ impl AppState {
         self.screen = match self.screen {
             Screen::Welcome => Screen::Welcome,
             Screen::ModelPresetSelect => Screen::Welcome,
-            Screen::ScopeSelect => Screen::ModelPresetSelect,
+            Screen::CustomModelSelect => Screen::ModelPresetSelect,
+            Screen::ScopeSelect => {
+                if self.model_preset == ModelPreset::Custom {
+                    Screen::CustomModelSelect
+                } else {
+                    Screen::ModelPresetSelect
+                }
+            }
             Screen::PresetSelect => Screen::ScopeSelect,
             Screen::ComponentSelect => Screen::PresetSelect,
             Screen::SkillSelect => {
@@ -255,13 +287,28 @@ impl AppState {
     /// Get current list length for cursor bounds.
     pub fn list_len(&self) -> usize {
         match self.screen {
-            Screen::ModelPresetSelect => 3,
+            Screen::ModelPresetSelect => 4,
+            Screen::CustomModelSelect => AGENT_PHASES.len(),
             Screen::PresetSelect => 4,
             Screen::ComponentSelect => self.components.len(),
             Screen::SkillSelect => self.skills.len(),
             Screen::OptimizerSelect => self.optimizers.len(),
             Screen::ScopeSelect => 2,
             _ => 0,
+        }
+    }
+
+    /// Cycle custom model right for the current phase.
+    pub fn cycle_custom_model_right(&mut self) {
+        if let Some(model) = self.custom_models.get_mut(self.cursor) {
+            *model = model.next();
+        }
+    }
+
+    /// Cycle custom model left for the current phase.
+    pub fn cycle_custom_model_left(&mut self) {
+        if let Some(model) = self.custom_models.get_mut(self.cursor) {
+            *model = model.prev();
         }
     }
 

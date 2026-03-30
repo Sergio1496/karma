@@ -67,6 +67,7 @@ mod tests {
             skills: vec![],
             preset: crate::config::types::PresetId::Custom,
             model_preset: crate::config::types::ModelPreset::Balanced,
+            custom_models: None,
             scope: ConfigScope::User,
             dry_run: false,
         }

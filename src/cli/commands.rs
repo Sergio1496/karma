@@ -124,8 +124,9 @@ fn parse_model_preset(s: &str) -> Result<ModelPreset, String> {
         "balanced" => Ok(ModelPreset::Balanced),
         "performance" => Ok(ModelPreset::Performance),
         "economy" => Ok(ModelPreset::Economy),
+        "custom" => Ok(ModelPreset::Custom),
         _ => Err(format!(
-            "Unknown model preset '{s}'. Valid: balanced, performance, economy"
+            "Unknown model preset '{s}'. Valid: balanced, performance, economy, custom"
         )),
     }
 }

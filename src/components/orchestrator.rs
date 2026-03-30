@@ -54,7 +54,7 @@ impl Component for OrchestratorComponent {
             section::inject_markdown_section(&existing, ROUTING_SECTION, &routing_instructions);
 
         // 2. Inject model assignments table
-        let assignments = self.render_assignments(&ctx.selection.model_preset);
+        let assignments = self.render_assignments(&ctx.selection);
         let updated = section::inject_markdown_section(&updated, ASSIGNMENTS_SECTION, &assignments);
 
         let result = writer::write_file_atomic_str(&target, &updated)
@@ -86,14 +86,14 @@ impl OrchestratorComponent {
         }
     }
 
-    fn render_assignments(&self, preset: &crate::config::types::ModelPreset) -> String {
+    fn render_assignments(&self, selection: &crate::config::types::Selection) -> String {
         let mut content = String::from("## Model Assignments\n\n");
         content.push_str(&format!(
             "**Preset: {}** — {}\n\n",
-            preset.display_name(),
-            preset.description()
+            selection.model_preset.display_name(),
+            selection.model_preset.description()
         ));
-        content.push_str(&preset.render_markdown_table());
+        content.push_str(&selection.render_markdown_table());
         content
     }
 }
