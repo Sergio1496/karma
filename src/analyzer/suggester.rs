@@ -20,9 +20,9 @@ pub enum Priority {
 impl Priority {
     pub fn label(&self) -> &'static str {
         match self {
-            Priority::High => "Recommended",
-            Priority::Medium => "Suggested",
-            Priority::Low => "Optional",
+            Priority::High => "Recomendado",
+            Priority::Medium => "Sugerido",
+            Priority::Low => "Opcional",
         }
     }
 }
@@ -49,94 +49,98 @@ pub fn suggest(info: &ProjectInfo) -> AnalysisResult {
     let mut skills = Vec::new();
     let mut warnings = Vec::new();
 
-    // Orchestrator: always recommended for any project
+    // Orchestrator: siempre recomendado
     if !info.technologies.is_empty() {
         components.push(Suggestion {
             component: ComponentId::Orchestrator,
-            reason: "SDD workflow improves code quality for any project".to_string(),
+            reason: "El workflow SDD mejora la calidad del codigo en cualquier proyecto"
+                .to_string(),
             priority: Priority::High,
         });
     }
 
-    // Permissions: always recommended
+    // Permissions: siempre recomendado
     components.push(Suggestion {
         component: ComponentId::Permissions,
-        reason: "Security-first defaults prevent accidental destructive operations".to_string(),
+        reason: "Reglas de seguridad que previenen operaciones destructivas accidentales"
+            .to_string(),
         priority: Priority::High,
     });
 
-    // MCP (Context7): recommended when frameworks are detected
+    // MCP (Context7): recomendado cuando se detectan frameworks
     if !info.frameworks.is_empty() {
         let fw_names: Vec<&str> = info.frameworks.iter().map(|f| f.display_name()).collect();
         components.push(Suggestion {
             component: ComponentId::McpServers,
-            reason: format!("Context7 provides live docs for {}", fw_names.join(", ")),
+            reason: format!("Context7 provee docs en vivo para {}", fw_names.join(", ")),
             priority: Priority::High,
         });
     } else {
         components.push(Suggestion {
             component: ComponentId::McpServers,
-            reason: "Context7 provides live framework documentation".to_string(),
+            reason: "Context7 provee documentacion en vivo de frameworks".to_string(),
             priority: Priority::Medium,
         });
     }
 
-    // Sub-Agents: recommended for larger projects (multiple technologies)
+    // Sub-Agents: recomendado para proyectos complejos
     if info.technologies.len() > 1 || !info.frameworks.is_empty() {
         components.push(Suggestion {
             component: ComponentId::SubAgents,
-            reason: "Sub-agents help delegate tasks in complex projects".to_string(),
+            reason: "Sub-agentes ayudan a delegar tareas en proyectos complejos".to_string(),
             priority: Priority::High,
         });
     } else {
         components.push(Suggestion {
             component: ComponentId::SubAgents,
-            reason: "Sub-agents enable SDD task delegation".to_string(),
+            reason: "Sub-agentes permiten delegacion de tareas SDD".to_string(),
             priority: Priority::Medium,
         });
     }
 
-    // Skills: always suggested
+    // Skills: siempre sugerido
     components.push(Suggestion {
         component: ComponentId::Skills,
         reason: "Slash commands para workflows (branch-pr, issue-creation)".to_string(),
         priority: Priority::Medium,
     });
 
-    // RTK: always recommended for token savings
+    // RTK: siempre recomendado
     components.push(Suggestion {
         component: ComponentId::Rtk,
         reason: "Proxy CLI que ahorra 60-90% de tokens en comandos shell".to_string(),
         priority: Priority::High,
     });
 
-    // Skill suggestions based on tech stack
+    // Sugerencias de skills segun el tech stack
     skills.push(SkillSuggestion {
         skill_id: "branch-pr".to_string(),
-        reason: "PR workflow automation".to_string(),
+        reason: "Automatizacion del workflow de PRs".to_string(),
     });
 
     skills.push(SkillSuggestion {
         skill_id: "issue-creation".to_string(),
-        reason: "Issue creation workflow".to_string(),
+        reason: "Workflow de creacion de issues".to_string(),
     });
 
-    // Warnings about existing configuration
+    // Advertencias sobre configuracion existente
     if info.has_claude_md {
         warnings.push(
-            "CLAUDE.md already exists. Orchestrator will inject managed sections without overwriting your content.".to_string()
+            "CLAUDE.md ya existe. El orquestador inyectara secciones gestionadas sin sobreescribir tu contenido.".to_string()
         );
     }
 
     if info.has_settings {
         warnings.push(
-            ".claude/settings.json exists. Permissions will be merged additively.".to_string(),
+            ".claude/settings.json existe. Los permisos se fusionaran de forma aditiva."
+                .to_string(),
         );
     }
 
     if info.has_mcp_config {
-        warnings
-            .push(".mcp.json exists. MCP configuration will be merged, not replaced.".to_string());
+        warnings.push(
+            ".mcp.json existe. La configuracion MCP se fusionara, no se reemplazara.".to_string(),
+        );
     }
 
     // Sort by priority
@@ -176,7 +180,7 @@ mod tests {
         };
         let result = suggest(&info);
 
-        // Should recommend MCP with Axum context
+        // Deberia recomendar MCP con contexto Axum
         let mcp = result
             .component_suggestions
             .iter()

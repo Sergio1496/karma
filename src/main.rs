@@ -248,14 +248,14 @@ fn cmd_analyze() -> Result<()> {
 
     let cwd = std::env::current_dir()?;
     println!("karma analyze");
-    println!("  Directory: {}", cwd.display());
+    println!("  Directorio: {}", cwd.display());
     println!();
 
     let info = detector::detect(&cwd);
 
     // Tech stack
     if info.technologies.is_empty() {
-        println!("  No technologies detected.");
+        println!("  No se detectaron tecnologias.");
     } else {
         println!("  Tech stack:");
         for tech in &info.technologies {
@@ -270,68 +270,68 @@ fn cmd_analyze() -> Result<()> {
         }
     }
 
-    // Claude Code status
+    // Estado de Claude Code
     println!();
-    println!("  Claude Code status:");
+    println!("  Estado de Claude Code:");
     println!(
         "    CLAUDE.md:     {}",
         if info.has_claude_md {
-            "found"
+            "encontrado"
         } else {
-            "not found"
+            "no encontrado"
         }
     );
     println!(
         "    .claude/ dir:  {}",
         if info.has_claude_config {
-            "found"
+            "encontrado"
         } else {
-            "not found"
+            "no encontrado"
         }
     );
     println!(
         "    settings.json: {}",
         if info.has_settings {
-            "found"
+            "encontrado"
         } else {
-            "not found"
+            "no encontrado"
         }
     );
     println!(
         "    skills/:       {}",
         if info.has_skills {
-            "found"
+            "encontrado"
         } else {
-            "not found"
+            "no encontrado"
         }
     );
     println!(
         "    agents/:       {}",
         if info.has_agents {
-            "found"
+            "encontrado"
         } else {
-            "not found"
+            "no encontrado"
         }
     );
     println!(
         "    .mcp.json:     {}",
         if info.has_mcp_config {
-            "found"
+            "encontrado"
         } else {
-            "not found"
+            "no encontrado"
         }
     );
 
-    // Suggestions
+    // Sugerencias
     let analysis = suggester::suggest(&info);
 
     println!();
-    println!("  Component suggestions:");
+    println!("  Sugerencias de componentes:");
     for s in &analysis.component_suggestions {
         let badge = match s.priority {
-            Priority::High => "[HIGH]",
+            Priority::High => "[ALTO]",
             Priority::Medium => "[MED] ",
-            Priority::Low => "[LOW] ",
+            Priority::Low => "[BAJO]",
         };
         println!(
             "    {} {} - {}",
@@ -343,7 +343,7 @@ fn cmd_analyze() -> Result<()> {
 
     if !analysis.skill_suggestions.is_empty() {
         println!();
-        println!("  Skill suggestions:");
+        println!("  Sugerencias de skills:");
         for s in &analysis.skill_suggestions {
             println!("    - {} ({})", s.skill_id, s.reason);
         }
@@ -351,14 +351,16 @@ fn cmd_analyze() -> Result<()> {
 
     if !analysis.warnings.is_empty() {
         println!();
-        println!("  Warnings:");
+        println!("  Advertencias:");
         for w in &analysis.warnings {
             println!("    ! {w}");
         }
     }
 
     println!();
-    println!("  Run `karma install --preset recommended` to install suggested components.");
+    println!(
+        "  Ejecuta `karma install --preset recommended` para instalar los componentes sugeridos."
+    );
 
     Ok(())
 }
