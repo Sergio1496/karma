@@ -71,7 +71,10 @@ pub fn render(frame: &mut Frame, area: Rect, state: &AppState) {
         lines.push(Line::from(vec![
             Span::styled(format!("  {} ", cursor_char), line_style),
             Span::styled(format!("{:<16}", phase_id), line_style),
-            Span::styled(format!("{:<width$}", description, width = max_desc_len + 2), styles::muted()),
+            Span::styled(
+                format!("{:<width$}", description, width = max_desc_len + 2),
+                styles::muted(),
+            ),
             Span::styled(model_label, model_style),
         ]));
     }
