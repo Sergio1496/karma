@@ -8,8 +8,7 @@ const GITHUB_API_SKILLS_URL: &str =
     "https://api.github.com/repos/Gentleman-Programming/gentle-ai/contents/skills";
 
 /// Default raw content base URL.
-const RAW_BASE_URL: &str =
-    "https://raw.githubusercontent.com/Gentleman-Programming/gentle-ai/main";
+const RAW_BASE_URL: &str = "https://raw.githubusercontent.com/Gentleman-Programming/gentle-ai/main";
 
 /// GitHub API response for directory listing.
 #[derive(Debug, Deserialize)]

@@ -161,9 +161,9 @@ impl ContextIsolationComponent {
                     entry["hooks"]
                         .as_array()
                         .map(|hooks| {
-                            hooks.iter().any(|h| {
-                                h["command"].as_str() == Some(HOOK_COMMAND)
-                            })
+                            hooks
+                                .iter()
+                                .any(|h| h["command"].as_str() == Some(HOOK_COMMAND))
                         })
                         .unwrap_or(false)
                 })
@@ -208,8 +208,8 @@ impl ContextIsolationComponent {
             .unwrap()
             .push(Self::hook_entry());
 
-        let output = serde_json::to_string_pretty(&settings)
-            .context("Failed to serialize settings")?;
+        let output =
+            serde_json::to_string_pretty(&settings).context("Failed to serialize settings")?;
 
         writer::write_file_atomic_str(&settings_path, &output)
             .with_context(|| format!("Failed to write {}", settings_path.display()))?;
@@ -288,14 +288,16 @@ impl ContextIsolationComponent {
                 !entry["hooks"]
                     .as_array()
                     .map(|hooks| {
-                        hooks.iter().any(|h| h["command"].as_str() == Some(HOOK_COMMAND))
+                        hooks
+                            .iter()
+                            .any(|h| h["command"].as_str() == Some(HOOK_COMMAND))
                     })
                     .unwrap_or(false)
             });
         }
 
-        let output = serde_json::to_string_pretty(&settings)
-            .context("Failed to serialize settings")?;
+        let output =
+            serde_json::to_string_pretty(&settings).context("Failed to serialize settings")?;
 
         writer::write_file_atomic_str(&settings_path, &output)
             .with_context(|| format!("Failed to write {}", settings_path.display()))?;
@@ -356,7 +358,8 @@ impl Component for ContextIsolationComponent {
         let hook_changed = self.inject_hook(ctx)?;
         if hook_changed {
             files_written.push(self.settings_path(ctx));
-            messages.push("PreToolUse hook for context isolation added to settings.json".to_string());
+            messages
+                .push("PreToolUse hook for context isolation added to settings.json".to_string());
         }
 
         if messages.is_empty() {
@@ -453,7 +456,11 @@ mod tests {
                 ]
             }
         });
-        fs::write(&settings_path, serde_json::to_string_pretty(&existing).unwrap()).unwrap();
+        fs::write(
+            &settings_path,
+            serde_json::to_string_pretty(&existing).unwrap(),
+        )
+        .unwrap();
 
         let component = ContextIsolationComponent;
         component.prepare(&ctx).unwrap();
@@ -482,7 +489,8 @@ mod tests {
         assert!(ContextIsolationComponent::has_hook(
             &serde_json::from_str::<Value>(
                 &fs::read_to_string(ctx.paths.global_settings_json()).unwrap()
-            ).unwrap()
+            )
+            .unwrap()
         ));
 
         // Remove it
@@ -512,7 +520,11 @@ mod tests {
                 ]
             }
         });
-        fs::write(&settings_path, serde_json::to_string_pretty(&existing).unwrap()).unwrap();
+        fs::write(
+            &settings_path,
+            serde_json::to_string_pretty(&existing).unwrap(),
+        )
+        .unwrap();
 
         let component = ContextIsolationComponent;
         component.remove_hook(&ctx).unwrap();

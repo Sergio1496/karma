@@ -13,7 +13,6 @@
 /// 1. **Replace**: If markers exist, replace content between them.
 /// 2. **Append**: If markers don't exist, append new marked section.
 /// 3. **Remove**: If content is empty, remove the entire marked block.
-
 const MARKER_PREFIX: &str = "karma";
 
 /// Build the opening marker for a section.
@@ -151,8 +150,7 @@ mod tests {
 
     #[test]
     fn test_remove_section_with_empty_content() {
-        let existing =
-            "Before\n\n<!-- karma:test -->\nSome content\n<!-- /karma:test -->\n\nAfter";
+        let existing = "Before\n\n<!-- karma:test -->\nSome content\n<!-- /karma:test -->\n\nAfter";
         let result = inject_markdown_section(existing, "test", "");
         assert!(!result.contains("karma:test"));
         assert!(!result.contains("Some content"));

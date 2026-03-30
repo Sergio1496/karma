@@ -53,11 +53,7 @@ impl Component for McpComponent {
 
         Ok(ApplyResult {
             changed: result.changed,
-            files_written: if result.changed {
-                vec![target]
-            } else {
-                vec![]
-            },
+            files_written: if result.changed { vec![target] } else { vec![] },
             messages: vec!["MCP server Context7 configured".to_string()],
         })
     }

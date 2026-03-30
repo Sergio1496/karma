@@ -81,11 +81,14 @@ mod tests {
         ]);
         let plan = build_plan(&sel);
 
-        assert_eq!(plan.ordered_components, vec![
-            ComponentId::Permissions,
-            ComponentId::Orchestrator,
-            ComponentId::Skills,
-        ]);
+        assert_eq!(
+            plan.ordered_components,
+            vec![
+                ComponentId::Permissions,
+                ComponentId::Orchestrator,
+                ComponentId::Skills,
+            ]
+        );
     }
 
     #[test]
@@ -107,7 +110,11 @@ mod tests {
 
     #[test]
     fn test_expand_deduplicates() {
-        let components = vec![ComponentId::McpServers, ComponentId::McpServers, ComponentId::Skills];
+        let components = vec![
+            ComponentId::McpServers,
+            ComponentId::McpServers,
+            ComponentId::Skills,
+        ];
         let expanded = expand_dependencies(&components);
         assert_eq!(expanded.len(), 2);
     }

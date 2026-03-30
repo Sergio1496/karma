@@ -192,10 +192,7 @@ mod tests {
     #[test]
     fn test_install_multiple_skills() {
         let tmp = TempDir::new().unwrap();
-        let ctx = make_ctx(
-            &tmp,
-            vec!["skill-a".to_string(), "skill-b".to_string()],
-        );
+        let ctx = make_ctx(&tmp, vec!["skill-a".to_string(), "skill-b".to_string()]);
 
         let component = SkillsComponent;
         component.prepare(&ctx).unwrap();

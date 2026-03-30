@@ -6,8 +6,16 @@ use crate::tui::app_state::AppState;
 use crate::tui::widgets;
 
 const SCOPES: &[(ConfigScope, &str, &str)] = &[
-    (ConfigScope::User, "Usuario (~/.claude/)", "Configuracion global para todos los proyectos"),
-    (ConfigScope::Project, "Proyecto (.claude/)", "Configuracion solo para este proyecto"),
+    (
+        ConfigScope::User,
+        "Usuario (~/.claude/)",
+        "Configuracion global para todos los proyectos",
+    ),
+    (
+        ConfigScope::Project,
+        "Proyecto (.claude/)",
+        "Configuracion solo para este proyecto",
+    ),
 ];
 
 pub fn render(frame: &mut Frame, area: Rect, state: &AppState) {
@@ -22,9 +30,7 @@ pub fn render(frame: &mut Frame, area: Rect, state: &AppState) {
 
     let items: Vec<(String, String, bool)> = SCOPES
         .iter()
-        .map(|(id, name, desc)| {
-            (name.to_string(), desc.to_string(), *id == state.scope)
-        })
+        .map(|(id, name, desc)| (name.to_string(), desc.to_string(), *id == state.scope))
         .collect();
 
     widgets::render_selectable_list(frame, chunks[1], "Alcance", &items, state.cursor, false);
@@ -32,10 +38,17 @@ pub fn render(frame: &mut Frame, area: Rect, state: &AppState) {
     widgets::render_footer(
         frame,
         chunks[2],
-        &[("Flechas", "Navegar"), ("Enter", "Seleccionar"), ("Esc", "Atras")],
+        &[
+            ("Flechas", "Navegar"),
+            ("Enter", "Seleccionar"),
+            ("Esc", "Atras"),
+        ],
     );
 }
 
 pub fn scope_at(cursor: usize) -> ConfigScope {
-    SCOPES.get(cursor).map(|(id, _, _)| *id).unwrap_or(ConfigScope::User)
+    SCOPES
+        .get(cursor)
+        .map(|(id, _, _)| *id)
+        .unwrap_or(ConfigScope::User)
 }

@@ -76,8 +76,18 @@ pub fn default_catalog() -> SkillCatalog {
     SkillCatalog {
         base_url: DEFAULT_BASE_URL.to_string(),
         skills: vec![
-            skill("branch-pr", "Branch & PR", "Workflow completo de crear branch + PR con convenciones", SkillCategory::Foundation),
-            skill("issue-creation", "Issue Creation", "Workflow de crear issues con templates y labels", SkillCategory::Foundation),
+            skill(
+                "branch-pr",
+                "Branch & PR",
+                "Workflow completo de crear branch + PR con convenciones",
+                SkillCategory::Foundation,
+            ),
+            skill(
+                "issue-creation",
+                "Issue Creation",
+                "Workflow de crear issues con templates y labels",
+                SkillCategory::Foundation,
+            ),
         ],
     }
 }

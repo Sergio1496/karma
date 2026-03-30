@@ -55,19 +55,14 @@ impl Component for OrchestratorComponent {
 
         // 2. Inject model assignments table
         let assignments = self.render_assignments(&ctx.selection.model_preset);
-        let updated =
-            section::inject_markdown_section(&updated, ASSIGNMENTS_SECTION, &assignments);
+        let updated = section::inject_markdown_section(&updated, ASSIGNMENTS_SECTION, &assignments);
 
         let result = writer::write_file_atomic_str(&target, &updated)
             .with_context(|| format!("Failed to write {}", target.display()))?;
 
         Ok(ApplyResult {
             changed: result.changed,
-            files_written: if result.changed {
-                vec![target]
-            } else {
-                vec![]
-            },
+            files_written: if result.changed { vec![target] } else { vec![] },
             messages: vec![format!(
                 "Model assignments ({}) injected into CLAUDE.md",
                 ctx.selection.model_preset.display_name()
@@ -144,7 +139,11 @@ mod tests {
 
         let claude_md = ctx.paths.global_claude_md();
         fs::create_dir_all(claude_md.parent().unwrap()).unwrap();
-        fs::write(&claude_md, "# My Custom Instructions\n\nDo things my way.\n").unwrap();
+        fs::write(
+            &claude_md,
+            "# My Custom Instructions\n\nDo things my way.\n",
+        )
+        .unwrap();
 
         let component = OrchestratorComponent;
         component.prepare(&ctx).unwrap();

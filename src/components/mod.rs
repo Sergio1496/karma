@@ -1,19 +1,19 @@
-pub mod skills;
-pub mod orchestrator;
-pub mod mcp;
-pub mod permissions;
 pub mod agents;
-pub mod context_isolation;
-pub mod rtk;
 pub mod code_review_graph;
+pub mod context_isolation;
+pub mod mcp;
+pub mod orchestrator;
+pub mod permissions;
+pub mod rtk;
+pub mod skills;
 
 use std::path::PathBuf;
 
 use anyhow::Result;
 
+use crate::backup::manifest::Manifest;
 use crate::config::paths::ClaudePaths;
 use crate::config::types::{ComponentId, Selection};
-use crate::backup::manifest::Manifest;
 
 /// Result of applying a component's configuration.
 #[derive(Debug)]
@@ -229,9 +229,7 @@ pub fn detect_optimizer(id: ComponentId, paths: &ClaudePaths) -> OptimizerStatus
             let graph_dir = cwd.join(".code-review-graph");
             let project_mcp = paths.project_mcp_json(&cwd);
 
-            if graph_dir.exists()
-                || file_contains(&project_mcp, "code-review-graph")
-            {
+            if graph_dir.exists() || file_contains(&project_mcp, "code-review-graph") {
                 return OptimizerStatus::ProjectInstalled;
             }
 

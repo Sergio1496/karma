@@ -51,9 +51,15 @@ pub fn render_selectable_list(
         .map(|(i, (label, desc, selected))| {
             let cursor_char = if i == cursor { ">" } else { " " };
             let check = if multi_select {
-                if *selected { "[x]" } else { "[ ]" }
+                if *selected {
+                    "[x]"
+                } else {
+                    "[ ]"
+                }
+            } else if *selected {
+                "(*)"
             } else {
-                if *selected { "(*)" } else { "( )" }
+                "( )"
             };
 
             let style = if i == cursor {

@@ -17,19 +17,19 @@ jobs:
         include:
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
-            artifact: karma-cli
+            binary: karma
           - target: aarch64-unknown-linux-gnu
             os: ubuntu-latest
-            artifact: karma-cli
+            binary: karma
           - target: x86_64-apple-darwin
             os: macos-latest
-            artifact: karma-cli
+            binary: karma
           - target: aarch64-apple-darwin
             os: macos-latest
-            artifact: karma-cli
+            binary: karma
           - target: x86_64-pc-windows-msvc
             os: windows-latest
-            artifact: karma-cli.exe
+            binary: karma.exe
 
     steps:
       - uses: actions/checkout@v4
@@ -55,17 +55,17 @@ jobs:
         run: |
           cd target/${{ matrix.target }}/release
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            7z a ../../../karma-cli-${{ matrix.target }}.zip ${{ matrix.artifact }}
+            7z a ../../../karma-${{ matrix.target }}.zip ${{ matrix.binary }}
           else
-            tar czf ../../../karma-cli-${{ matrix.target }}.tar.gz ${{ matrix.artifact }}
+            tar czf ../../../karma-${{ matrix.target }}.tar.gz ${{ matrix.binary }}
           fi
         shell: bash
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: karma-cli-${{ matrix.target }}
-          path: karma-cli-${{ matrix.target }}.*
+          name: karma-${{ matrix.target }}
+          path: karma-${{ matrix.target }}.*
 
   release:
     name: Create Release
@@ -82,5 +82,84 @@ jobs:
         with:
           generate_release_notes: true
           files: |
-            karma-cli-*/karma-cli-*.tar.gz
-            karma-cli-*/karma-cli-*.zip
+            karma-*/karma-*.tar.gz
+            karma-*/karma-*.zip
+
+  homebrew:
+    name: Update Homebrew Formula
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: master
+
+      - name: Get version
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Download release artifacts for SHA256
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          BASE="https://github.com/Sergio1496/karma/releases/download/${TAG}"
+          curl -sL "${BASE}/karma-x86_64-apple-darwin.tar.gz" -o x86_mac.tar.gz
+          curl -sL "${BASE}/karma-aarch64-apple-darwin.tar.gz" -o arm_mac.tar.gz
+          curl -sL "${BASE}/karma-x86_64-unknown-linux-gnu.tar.gz" -o x86_linux.tar.gz
+
+      - name: Compute SHA256
+        id: sha
+        run: |
+          echo "x86_mac=$(sha256sum x86_mac.tar.gz | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+          echo "arm_mac=$(sha256sum arm_mac.tar.gz | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+          echo "x86_linux=$(sha256sum x86_linux.tar.gz | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
+      - name: Generate and commit formula
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          SHA_X86_MAC: ${{ steps.sha.outputs.x86_mac }}
+          SHA_ARM_MAC: ${{ steps.sha.outputs.arm_mac }}
+          SHA_X86_LINUX: ${{ steps.sha.outputs.x86_linux }}
+        run: |
+          mkdir -p Formula
+          cat > Formula/karma.rb <<'FORMULA'
+          class Karma < Formula
+            desc "CLI tool to configure Claude Code with skills, sub-agents, and optimizers"
+            homepage "https://github.com/Sergio1496/karma"
+            version "VERSION_PLACEHOLDER"
+            license "MIT"
+
+            on_macos do
+              if Hardware::CPU.arm?
+                url "https://github.com/Sergio1496/karma/releases/download/vVERSION_PLACEHOLDER/karma-aarch64-apple-darwin.tar.gz"
+                sha256 "SHA_ARM_MAC_PLACEHOLDER"
+              else
+                url "https://github.com/Sergio1496/karma/releases/download/vVERSION_PLACEHOLDER/karma-x86_64-apple-darwin.tar.gz"
+                sha256 "SHA_X86_MAC_PLACEHOLDER"
+              end
+            end
+
+            on_linux do
+              url "https://github.com/Sergio1496/karma/releases/download/vVERSION_PLACEHOLDER/karma-x86_64-unknown-linux-gnu.tar.gz"
+              sha256 "SHA_X86_LINUX_PLACEHOLDER"
+            end
+
+            def install
+              bin.install "karma"
+            end
+
+            test do
+              assert_match "karma", shell_output("#{bin}/karma --version")
+            end
+          end
+          FORMULA
+          sed -i 's/^          //' Formula/karma.rb
+          sed -i "s/VERSION_PLACEHOLDER/$VERSION/g" Formula/karma.rb
+          sed -i "s/SHA_ARM_MAC_PLACEHOLDER/$SHA_ARM_MAC/g" Formula/karma.rb
+          sed -i "s/SHA_X86_MAC_PLACEHOLDER/$SHA_X86_MAC/g" Formula/karma.rb
+          sed -i "s/SHA_X86_LINUX_PLACEHOLDER/$SHA_X86_LINUX/g" Formula/karma.rb
+
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add Formula/karma.rb
+          git commit -m "brew: update formula to ${VERSION}"
+          git push origin master

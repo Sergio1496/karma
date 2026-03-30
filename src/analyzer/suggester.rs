@@ -70,10 +70,7 @@ pub fn suggest(info: &ProjectInfo) -> AnalysisResult {
         let fw_names: Vec<&str> = info.frameworks.iter().map(|f| f.display_name()).collect();
         components.push(Suggestion {
             component: ComponentId::McpServers,
-            reason: format!(
-                "Context7 provides live docs for {}",
-                fw_names.join(", ")
-            ),
+            reason: format!("Context7 provides live docs for {}", fw_names.join(", ")),
             priority: Priority::High,
         });
     } else {
@@ -133,14 +130,13 @@ pub fn suggest(info: &ProjectInfo) -> AnalysisResult {
 
     if info.has_settings {
         warnings.push(
-            ".claude/settings.json exists. Permissions will be merged additively.".to_string()
+            ".claude/settings.json exists. Permissions will be merged additively.".to_string(),
         );
     }
 
     if info.has_mcp_config {
-        warnings.push(
-            ".mcp.json exists. MCP configuration will be merged, not replaced.".to_string()
-        );
+        warnings
+            .push(".mcp.json exists. MCP configuration will be merged, not replaced.".to_string());
     }
 
     // Sort by priority

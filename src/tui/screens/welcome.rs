@@ -34,20 +34,36 @@ pub fn render(frame: &mut Frame, area: Rect) {
         .collect();
     frame.render_widget(Paragraph::new(logo_lines), chunks[1]);
 
-    let version = Line::from(vec![
-        Span::styled("  Configura Claude Code con agentes, model routing y optimizadores", styles::normal()),
-    ]);
+    let version = Line::from(vec![Span::styled(
+        "  Configura Claude Code con agentes, model routing y optimizadores",
+        styles::normal(),
+    )]);
     frame.render_widget(Paragraph::new(vec![version]), chunks[2]);
 
     let info = vec![
         Line::styled("  Esta herramienta te ayuda a configurar:", styles::muted()),
         Line::styled("", styles::muted()),
-        Line::styled("    - Model Routing (Opus/Sonnet/Haiku por tarea)", styles::normal()),
-        Line::styled("    - Sub-Agentes (16 agentes especializados con modelo asignado)", styles::normal()),
-        Line::styled("    - Skills (Librería de habilidades para Claude)", styles::normal()),
-        Line::styled("    - MCP Servers (Context7 para docs de frameworks)", styles::normal()),
+        Line::styled(
+            "    - Model Routing (Opus/Sonnet/Haiku por tarea)",
+            styles::normal(),
+        ),
+        Line::styled(
+            "    - Sub-Agentes (16 agentes especializados con modelo asignado)",
+            styles::normal(),
+        ),
+        Line::styled(
+            "    - Skills (Librería de habilidades para Claude)",
+            styles::normal(),
+        ),
+        Line::styled(
+            "    - MCP Servers (Context7 para docs de frameworks)",
+            styles::normal(),
+        ),
         Line::styled("    - Permisos (Seguridad por defecto)", styles::normal()),
-        Line::styled("    - Optimizadores (Ahorra tokens con librerías como RTK o Code Review Graph)", styles::normal()),
+        Line::styled(
+            "    - Optimizadores (Ahorra tokens con librerías como RTK o Code Review Graph)",
+            styles::normal(),
+        ),
         Line::styled("", styles::muted()),
         Line::styled("  Cualquier sugerencia es bienvenida <3", styles::muted()),
     ];

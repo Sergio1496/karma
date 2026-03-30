@@ -30,7 +30,10 @@ pub fn muted() -> Style {
 }
 
 pub fn highlight() -> Style {
-    Style::default().fg(BG).bg(PRIMARY).add_modifier(Modifier::BOLD)
+    Style::default()
+        .fg(BG)
+        .bg(PRIMARY)
+        .add_modifier(Modifier::BOLD)
 }
 
 pub fn selected() -> Style {

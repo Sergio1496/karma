@@ -66,10 +66,9 @@ impl CodeReviewGraphComponent {
         let mcp_path = self.mcp_path(ctx);
         if mcp_path.exists() {
             let content = fs::read_to_string(&mcp_path)?;
-            let parsed: serde_json::Value = serde_json::from_str(
-                &json_merge::strip_json_comments(&content),
-            )
-            .unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
+            let parsed: serde_json::Value =
+                serde_json::from_str(&json_merge::strip_json_comments(&content))
+                    .unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
 
             if parsed["mcpServers"].get("code-review-graph").is_some() {
                 let mut new_parsed = parsed.clone();
@@ -87,10 +86,9 @@ impl CodeReviewGraphComponent {
         let settings_path = self.settings_path(ctx);
         if settings_path.exists() {
             let content = fs::read_to_string(&settings_path)?;
-            let parsed: serde_json::Value = serde_json::from_str(
-                &json_merge::strip_json_comments(&content),
-            )
-            .unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
+            let parsed: serde_json::Value =
+                serde_json::from_str(&json_merge::strip_json_comments(&content))
+                    .unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
 
             if let Some(hooks) = parsed.get("hooks") {
                 if let Some(post) = hooks.get("PostToolUse") {
@@ -101,8 +99,7 @@ impl CodeReviewGraphComponent {
                                 .into_iter()
                                 .filter(|h| !h.to_string().contains("code-review-graph"))
                                 .collect();
-                            new_parsed["hooks"]["PostToolUse"] =
-                                serde_json::Value::Array(filtered);
+                            new_parsed["hooks"]["PostToolUse"] = serde_json::Value::Array(filtered);
                         }
                         let new_content = serde_json::to_string_pretty(&new_parsed)?;
                         writer::write_file_atomic_str(&settings_path, &new_content)?;
@@ -148,10 +145,7 @@ impl Component for CodeReviewGraphComponent {
     }
 
     fn affected_paths(&self, paths: &ClaudePaths) -> Vec<PathBuf> {
-        vec![
-            paths.mcp_user_config(),
-            paths.global_settings_json(),
-        ]
+        vec![paths.mcp_user_config(), paths.global_settings_json()]
     }
 
     fn prepare(&self, ctx: &PipelineContext) -> Result<()> {
@@ -188,7 +182,10 @@ impl Component for CodeReviewGraphComponent {
                 if status.success() {
                     messages.push("MCP server y hooks configurados".to_string());
                 } else {
-                    messages.push("Advertencia: code-review-graph install fallo, configurando manualmente...".to_string());
+                    messages.push(
+                        "Advertencia: code-review-graph install fallo, configurando manualmente..."
+                            .to_string(),
+                    );
                     // Fallback: manual config
                     self.manual_config(ctx, &mut messages)?;
                 }
@@ -207,8 +204,12 @@ impl Component for CodeReviewGraphComponent {
                 }
             }
             ConfigScope::User => {
-                messages.push("code-review-graph es per-project: solo se instalo el paquete".to_string());
-                messages.push("Ejecuta 'karma install -c crg --scope project' en cada proyecto".to_string());
+                messages.push(
+                    "code-review-graph es per-project: solo se instalo el paquete".to_string(),
+                );
+                messages.push(
+                    "Ejecuta 'karma install -c crg --scope project' en cada proyecto".to_string(),
+                );
             }
         }
 

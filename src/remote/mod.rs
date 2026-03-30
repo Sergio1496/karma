@@ -1,2 +1,2 @@
-pub mod fetcher;
 pub mod cache;
+pub mod fetcher;

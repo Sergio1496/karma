@@ -44,6 +44,12 @@ pub struct AppState {
     pub should_quit: bool,
 }
 
+impl Default for AppState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl AppState {
     pub fn new() -> Self {
         let catalog = catalog::default_catalog();
@@ -53,9 +59,19 @@ impl AppState {
             .iter()
             .map(|s| {
                 // Detect if skill is already installed in project
-                let project_skill = cwd.join(".claude").join("skills").join(&s.id).join("SKILL.md");
+                let project_skill = cwd
+                    .join(".claude")
+                    .join("skills")
+                    .join(&s.id)
+                    .join("SKILL.md");
                 let installed = project_skill.exists();
-                (s.id.clone(), s.name.clone(), s.category, installed, installed)
+                (
+                    s.id.clone(),
+                    s.name.clone(),
+                    s.category,
+                    installed,
+                    installed,
+                )
             })
             .collect();
 
@@ -70,7 +86,8 @@ impl AppState {
                 })
                 .collect(),
             optimizers: {
-                let paths = ClaudePaths::detect().unwrap_or_else(|_| ClaudePaths::with_home(std::path::PathBuf::from(".")));
+                let paths = ClaudePaths::detect()
+                    .unwrap_or_else(|_| ClaudePaths::with_home(std::path::PathBuf::from(".")));
                 ComponentId::OPTIMIZERS
                     .iter()
                     .map(|c| {

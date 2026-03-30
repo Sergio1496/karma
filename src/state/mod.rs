@@ -38,12 +38,12 @@ impl AppState {
     /// Write state to disk.
     pub fn save(&self, path: &Path) -> Result<()> {
         if let Some(parent) = path.parent() {
-            fs::create_dir_all(parent)
-                .with_context(|| format!("Failed to create state directory: {}", parent.display()))?;
+            fs::create_dir_all(parent).with_context(|| {
+                format!("Failed to create state directory: {}", parent.display())
+            })?;
         }
 
-        let content =
-            serde_json::to_string_pretty(self).context("Failed to serialize state")?;
+        let content = serde_json::to_string_pretty(self).context("Failed to serialize state")?;
 
         fs::write(path, format!("{content}\n"))
             .with_context(|| format!("Failed to write state file: {}", path.display()))

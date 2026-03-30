@@ -37,9 +37,10 @@ impl SkillFetcher {
 
         // Download from remote
         let url = catalog.download_url(skill);
-        let content = self.download(&url).await.with_context(|| {
-            format!("Failed to download skill '{}' from {}", skill.id, url)
-        })?;
+        let content = self
+            .download(&url)
+            .await
+            .with_context(|| format!("Failed to download skill '{}' from {}", skill.id, url))?;
 
         // Store in cache
         self.cache.set(&cache_key, &content)?;
@@ -63,7 +64,8 @@ impl SkillFetcher {
                         skill_id: skill_id.clone(),
                         content: Some(content),
                         error: None,
-                        from_cache: !force_refresh && self.cache.is_valid(&format!("skill_{skill_id}")),
+                        from_cache: !force_refresh
+                            && self.cache.is_valid(&format!("skill_{skill_id}")),
                     },
                     Err(e) => {
                         // Try to fall back to expired cache
@@ -100,14 +102,13 @@ impl SkillFetcher {
             .context("HTTP request failed")?;
 
         if !response.status().is_success() {
-            anyhow::bail!(
-                "HTTP {} for {}",
-                response.status(),
-                url
-            );
+            anyhow::bail!("HTTP {} for {}", response.status(), url);
         }
 
-        response.text().await.context("Failed to read response body")
+        response
+            .text()
+            .await
+            .context("Failed to read response body")
     }
 }
 
@@ -167,7 +168,11 @@ mod tests {
 
         assert_eq!(results.len(), 1);
         assert!(!results[0].success());
-        assert!(results[0].error.as_ref().unwrap().contains("not found in catalog"));
+        assert!(results[0]
+            .error
+            .as_ref()
+            .unwrap()
+            .contains("not found in catalog"));
     }
 
     #[tokio::test]
@@ -182,11 +187,7 @@ mod tests {
         let catalog = catalog::default_catalog();
 
         let result = fetcher
-            .fetch_skill(
-                &catalog,
-                catalog.find("branch-pr").unwrap(),
-                false,
-            )
+            .fetch_skill(&catalog, catalog.find("branch-pr").unwrap(), false)
             .await
             .unwrap();
 

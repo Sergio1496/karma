@@ -133,7 +133,10 @@ mod tests {
     fn test_paths_with_custom_home() {
         let paths = ClaudePaths::with_home(PathBuf::from("/home/test"));
 
-        assert_eq!(paths.global_config_dir(), PathBuf::from("/home/test/.claude"));
+        assert_eq!(
+            paths.global_config_dir(),
+            PathBuf::from("/home/test/.claude")
+        );
         assert_eq!(
             paths.global_claude_md(),
             PathBuf::from("/home/test/.claude/CLAUDE.md")
@@ -150,10 +153,7 @@ mod tests {
             paths.mcp_user_config(),
             PathBuf::from("/home/test/.claude.json")
         );
-        assert_eq!(
-            paths.state_dir(),
-            PathBuf::from("/home/test/.karma")
-        );
+        assert_eq!(paths.state_dir(), PathBuf::from("/home/test/.karma"));
     }
 
     #[test]

@@ -9,6 +9,12 @@ pub struct StageRunner {
     progress: Option<ProgressCallback>,
 }
 
+impl Default for StageRunner {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl StageRunner {
     pub fn new() -> Self {
         Self { progress: None }
@@ -125,11 +131,7 @@ impl StageRunner {
             let result = component.apply(ctx);
 
             let (status, error, files) = match result {
-                Ok(apply_result) => (
-                    StepStatus::Succeeded,
-                    None,
-                    apply_result.files_written,
-                ),
+                Ok(apply_result) => (StepStatus::Succeeded, None, apply_result.files_written),
                 Err(e) => (StepStatus::Failed, Some(e.to_string()), vec![]),
             };
 

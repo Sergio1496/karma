@@ -16,8 +16,12 @@ pub fn create_snapshot(backup_base_dir: &Path, files: &[PathBuf]) -> Result<Mani
     let timestamp = Utc::now().format("%Y%m%d_%H%M%S").to_string();
     let backup_dir = backup_base_dir.join(&timestamp);
 
-    fs::create_dir_all(&backup_dir)
-        .with_context(|| format!("Failed to create backup directory: {}", backup_dir.display()))?;
+    fs::create_dir_all(&backup_dir).with_context(|| {
+        format!(
+            "Failed to create backup directory: {}",
+            backup_dir.display()
+        )
+    })?;
 
     let mut entries = Vec::new();
 
@@ -92,7 +96,7 @@ pub fn list_snapshots(backup_base_dir: &Path) -> Result<Vec<Manifest>> {
         .collect();
 
     // Sort by name descending (timestamps sort lexicographically)
-    entries.sort_by(|a, b| b.file_name().cmp(&a.file_name()));
+    entries.sort_by_key(|b| std::cmp::Reverse(b.file_name()));
 
     for entry in entries {
         let manifest_path = entry.path().join("manifest.json");

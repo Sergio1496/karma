@@ -57,7 +57,9 @@ fn cmd_install(args: karma::cli::commands::InstallArgs) -> Result<()> {
     };
 
     // Auto-include Skills component if skills are selected
-    if !args.skill.is_empty() && !selected_components.contains(&karma::config::types::ComponentId::Skills) {
+    if !args.skill.is_empty()
+        && !selected_components.contains(&karma::config::types::ComponentId::Skills)
+    {
         selected_components.push(karma::config::types::ComponentId::Skills);
     }
 
@@ -86,7 +88,11 @@ fn cmd_install(args: karma::cli::commands::InstallArgs) -> Result<()> {
     }
 
     println!("  Preset: {}", selection.preset.display_name());
-    println!("  Models: {} ({})", selection.model_preset.display_name(), selection.model_preset.description());
+    println!(
+        "  Models: {} ({})",
+        selection.model_preset.display_name(),
+        selection.model_preset.description()
+    );
     println!("  Scope:  {:?}", selection.scope);
     println!("  Components (in order):");
     for c in &plan.ordered_components {
@@ -236,8 +242,8 @@ fn cmd_status() -> Result<()> {
 }
 
 fn cmd_analyze() -> Result<()> {
-    use karma::analyzer::{detector, suggester};
     use karma::analyzer::suggester::Priority;
+    use karma::analyzer::{detector, suggester};
 
     let cwd = std::env::current_dir()?;
     println!("karma analyze");
@@ -266,12 +272,54 @@ fn cmd_analyze() -> Result<()> {
     // Claude Code status
     println!();
     println!("  Claude Code status:");
-    println!("    CLAUDE.md:     {}", if info.has_claude_md { "found" } else { "not found" });
-    println!("    .claude/ dir:  {}", if info.has_claude_config { "found" } else { "not found" });
-    println!("    settings.json: {}", if info.has_settings { "found" } else { "not found" });
-    println!("    skills/:       {}", if info.has_skills { "found" } else { "not found" });
-    println!("    agents/:       {}", if info.has_agents { "found" } else { "not found" });
-    println!("    .mcp.json:     {}", if info.has_mcp_config { "found" } else { "not found" });
+    println!(
+        "    CLAUDE.md:     {}",
+        if info.has_claude_md {
+            "found"
+        } else {
+            "not found"
+        }
+    );
+    println!(
+        "    .claude/ dir:  {}",
+        if info.has_claude_config {
+            "found"
+        } else {
+            "not found"
+        }
+    );
+    println!(
+        "    settings.json: {}",
+        if info.has_settings {
+            "found"
+        } else {
+            "not found"
+        }
+    );
+    println!(
+        "    skills/:       {}",
+        if info.has_skills {
+            "found"
+        } else {
+            "not found"
+        }
+    );
+    println!(
+        "    agents/:       {}",
+        if info.has_agents {
+            "found"
+        } else {
+            "not found"
+        }
+    );
+    println!(
+        "    .mcp.json:     {}",
+        if info.has_mcp_config {
+            "found"
+        } else {
+            "not found"
+        }
+    );
 
     // Suggestions
     let analysis = suggester::suggest(&info);
@@ -284,7 +332,12 @@ fn cmd_analyze() -> Result<()> {
             Priority::Medium => "[MED] ",
             Priority::Low => "[LOW] ",
         };
-        println!("    {} {} - {}", badge, s.component.display_name(), s.reason);
+        println!(
+            "    {} {} - {}",
+            badge,
+            s.component.display_name(),
+            s.reason
+        );
     }
 
     if !analysis.skill_suggestions.is_empty() {
@@ -341,7 +394,11 @@ async fn cmd_sync(args: karma::cli::commands::SyncArgs) -> Result<()> {
     let state = AppState::load(&paths.state_file()).unwrap_or_default();
     let skill_ids: Vec<String> = if state.installed_skills.is_empty() {
         // If no state, sync all catalog skills
-        catalog.skill_ids().into_iter().map(|s| s.to_string()).collect()
+        catalog
+            .skill_ids()
+            .into_iter()
+            .map(|s| s.to_string())
+            .collect()
     } else {
         state.installed_skills.clone()
     };
@@ -413,11 +470,9 @@ fn cmd_hook_guard() -> Result<()> {
     let tool_input = &parsed["tool_input"];
     let session_id = parsed["session_id"].as_str().unwrap_or("");
 
-    if let Some(output) = karma::components::context_isolation::evaluate_hook(
-        tool_name,
-        tool_input,
-        session_id,
-    ) {
+    if let Some(output) =
+        karma::components::context_isolation::evaluate_hook(tool_name, tool_input, session_id)
+    {
         println!("{}", serde_json::to_string(&output)?);
     }
     // No output + exit 0 = allow the tool call
@@ -449,12 +504,7 @@ fn cmd_restore(args: karma::cli::commands::RestoreArgs) -> Result<()> {
     } else {
         println!("Available backups:");
         for (i, m) in snapshots.iter().enumerate() {
-            println!(
-                "  {}. {} ({} files)",
-                i + 1,
-                m.created_at,
-                m.entries.len()
-            );
+            println!("  {}. {} ({} files)", i + 1, m.created_at, m.entries.len());
         }
         println!("\nUse --latest or --id <timestamp> to restore.");
         return Ok(());

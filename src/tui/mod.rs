@@ -14,8 +14,8 @@ use crossterm::ExecutableCommand;
 use ratatui::prelude::*;
 
 use crate::components;
-use crate::config::paths::ClaudePaths;
 use crate::components::PipelineContext;
+use crate::config::paths::ClaudePaths;
 use crate::pipeline::orchestrator::PipelineOrchestrator;
 use crate::pipeline::planner;
 use crate::tui::app_state::{AppState, Screen, ScreenAction};
@@ -37,7 +37,10 @@ pub fn run() -> Result<()> {
     result
 }
 
-fn run_loop(terminal: &mut Terminal<CrosstermBackend<io::Stdout>>, state: &mut AppState) -> Result<()> {
+fn run_loop(
+    terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
+    state: &mut AppState,
+) -> Result<()> {
     loop {
         // Render current screen
         terminal.draw(|frame| render(frame, state))?;
@@ -91,9 +94,8 @@ fn render(frame: &mut Frame, state: &AppState) {
 
 fn handle_key(state: &mut AppState, key: KeyCode) -> ScreenAction {
     // Global keys
-    match key {
-        KeyCode::Char('q') => return ScreenAction::Quit,
-        _ => {}
+    if let KeyCode::Char('q') = key {
+        return ScreenAction::Quit;
     }
 
     // Screen-specific keys
@@ -136,18 +138,36 @@ fn handle_key(state: &mut AppState, key: KeyCode) -> ScreenAction {
         },
 
         Screen::ComponentSelect => match key {
-            KeyCode::Up => { state.cursor_up(); ScreenAction::Continue }
-            KeyCode::Down => { state.cursor_down(); ScreenAction::Continue }
-            KeyCode::Char(' ') => { state.toggle_current(); ScreenAction::Continue }
+            KeyCode::Up => {
+                state.cursor_up();
+                ScreenAction::Continue
+            }
+            KeyCode::Down => {
+                state.cursor_down();
+                ScreenAction::Continue
+            }
+            KeyCode::Char(' ') => {
+                state.toggle_current();
+                ScreenAction::Continue
+            }
             KeyCode::Enter => ScreenAction::Next,
             KeyCode::Esc => ScreenAction::Back,
             _ => ScreenAction::Continue,
         },
 
         Screen::SkillSelect => match key {
-            KeyCode::Up => { state.cursor_up(); ScreenAction::Continue }
-            KeyCode::Down => { state.cursor_down(); ScreenAction::Continue }
-            KeyCode::Char(' ') => { state.toggle_current(); ScreenAction::Continue }
+            KeyCode::Up => {
+                state.cursor_up();
+                ScreenAction::Continue
+            }
+            KeyCode::Down => {
+                state.cursor_down();
+                ScreenAction::Continue
+            }
+            KeyCode::Char(' ') => {
+                state.toggle_current();
+                ScreenAction::Continue
+            }
             KeyCode::Char('a') => {
                 let all_selected = state.skills.iter().all(|(_, _, _, s, _)| *s);
                 for (_, _, _, selected, _) in &mut state.skills {
@@ -161,10 +181,22 @@ fn handle_key(state: &mut AppState, key: KeyCode) -> ScreenAction {
         },
 
         Screen::OptimizerSelect => match key {
-            KeyCode::Up => { state.cursor_up(); ScreenAction::Continue }
-            KeyCode::Down => { state.cursor_down(); ScreenAction::Continue }
-            KeyCode::Right | KeyCode::Char(' ') => { state.cycle_optimizer_right(); ScreenAction::Continue }
-            KeyCode::Left => { state.cycle_optimizer_left(); ScreenAction::Continue }
+            KeyCode::Up => {
+                state.cursor_up();
+                ScreenAction::Continue
+            }
+            KeyCode::Down => {
+                state.cursor_down();
+                ScreenAction::Continue
+            }
+            KeyCode::Right | KeyCode::Char(' ') => {
+                state.cycle_optimizer_right();
+                ScreenAction::Continue
+            }
+            KeyCode::Left => {
+                state.cycle_optimizer_left();
+                ScreenAction::Continue
+            }
             KeyCode::Enter => ScreenAction::Next,
             KeyCode::Esc => ScreenAction::Back,
             _ => ScreenAction::Continue,
@@ -202,7 +234,9 @@ fn handle_key(state: &mut AppState, key: KeyCode) -> ScreenAction {
 }
 
 fn execute_pipeline(state: &mut AppState) {
-    state.progress_messages.push("Building execution plan...".to_string());
+    state
+        .progress_messages
+        .push("Building execution plan...".to_string());
 
     let selection = state.build_selection();
 
@@ -245,8 +279,12 @@ fn execute_pipeline(state: &mut AppState) {
             let skill_dir = cwd.join(".claude").join("skills").join(id);
             if skill_dir.exists() {
                 match std::fs::remove_dir_all(&skill_dir) {
-                    Ok(()) => state.progress_messages.push(format!("[Skill] {} eliminado del proyecto", id)),
-                    Err(e) => state.progress_messages.push(format!("[Skill] Error borrando {}: {e}", id)),
+                    Ok(()) => state
+                        .progress_messages
+                        .push(format!("[Skill] {} eliminado del proyecto", id)),
+                    Err(e) => state
+                        .progress_messages
+                        .push(format!("[Skill] Error borrando {}: {e}", id)),
                 }
             }
         }
@@ -264,7 +302,9 @@ fn execute_pipeline(state: &mut AppState) {
                                 state.progress_messages.push(format!("[Uninstall] {msg}"));
                             }
                         }
-                        Err(e) => state.progress_messages.push(format!("[Uninstall] RTK error: {e}")),
+                        Err(e) => state
+                            .progress_messages
+                            .push(format!("[Uninstall] RTK error: {e}")),
                     }
                 }
                 crate::config::types::ComponentId::CodeReviewGraph => {
@@ -275,7 +315,9 @@ fn execute_pipeline(state: &mut AppState) {
                                 state.progress_messages.push(format!("[Uninstall] {msg}"));
                             }
                         }
-                        Err(e) => state.progress_messages.push(format!("[Uninstall] CRG error: {e}")),
+                        Err(e) => state
+                            .progress_messages
+                            .push(format!("[Uninstall] CRG error: {e}")),
                     }
                 }
                 crate::config::types::ComponentId::ContextIsolation => {
@@ -286,7 +328,9 @@ fn execute_pipeline(state: &mut AppState) {
                                 state.progress_messages.push(format!("[Uninstall] {msg}"));
                             }
                         }
-                        Err(e) => state.progress_messages.push(format!("[Uninstall] Context Isolation error: {e}")),
+                        Err(e) => state
+                            .progress_messages
+                            .push(format!("[Uninstall] Context Isolation error: {e}")),
                     }
                 }
                 _ => {}
@@ -299,25 +343,25 @@ fn execute_pipeline(state: &mut AppState) {
     match orch.execute(&ctx) {
         Ok(result) => {
             for step in &result.prepare.steps {
-                state.progress_messages.push(format!(
-                    "[Prepare] {} - {}",
-                    step.component_id, step.status
-                ));
+                state
+                    .progress_messages
+                    .push(format!("[Prepare] {} - {}", step.component_id, step.status));
             }
             for step in &result.apply.steps {
-                state.progress_messages.push(format!(
-                    "[Apply] {} - {}",
-                    step.component_id, step.status
-                ));
+                state
+                    .progress_messages
+                    .push(format!("[Apply] {} - {}", step.component_id, step.status));
             }
 
             if result.success() {
                 let count = result.total_files_written().len();
-                state.progress_messages.push(format!(
-                    "Installation complete! {count} files written."
-                ));
+                state
+                    .progress_messages
+                    .push(format!("Installation complete! {count} files written."));
             } else {
-                state.progress_messages.push("Installation failed.".to_string());
+                state
+                    .progress_messages
+                    .push("Installation failed.".to_string());
             }
 
             state.execution_result = Some(result);

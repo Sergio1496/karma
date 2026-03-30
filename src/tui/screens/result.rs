@@ -39,10 +39,7 @@ pub fn render(frame: &mut Frame, area: Rect, state: &AppState) {
                 ));
             }
         } else {
-            lines.push(Line::styled(
-                "  La instalacion fallo!",
-                styles::error(),
-            ));
+            lines.push(Line::styled("  La instalacion fallo!", styles::error()));
             lines.push(Line::styled("", styles::normal()));
 
             for step in &result.apply.steps {
@@ -63,7 +60,10 @@ pub fn render(frame: &mut Frame, area: Rect, state: &AppState) {
             }
         }
     } else {
-        lines.push(Line::styled("  Sin resultados disponibles.", styles::muted()));
+        lines.push(Line::styled(
+            "  Sin resultados disponibles.",
+            styles::muted(),
+        ));
     }
 
     widgets::render_info_box(frame, chunks[1], "Resultado", lines);

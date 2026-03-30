@@ -134,9 +134,8 @@ pub fn detect(root: &Path) -> ProjectInfo {
     ];
 
     for (file, tech) in markers {
-        if file.starts_with('*') {
+        if let Some(ext) = file.strip_prefix('*') {
             // Glob pattern - check if any matching file exists
-            let ext = &file[1..];
             if has_file_with_extension(root, ext) && !info.technologies.contains(tech) {
                 info.technologies.push(tech.clone());
             }
@@ -209,9 +208,7 @@ fn has_file_with_extension(root: &Path, ext: &str) -> bool {
 }
 
 fn detect_js_frameworks(package_json: &str, info: &mut ProjectInfo) {
-    let deps_check = |dep: &str| -> bool {
-        package_json.contains(&format!("\"{dep}\""))
-    };
+    let deps_check = |dep: &str| -> bool { package_json.contains(&format!("\"{dep}\"")) };
 
     if deps_check("next") {
         info.frameworks.push(Framework::NextJs);

@@ -28,7 +28,11 @@ pub fn render(frame: &mut Frame, area: Rect, state: &AppState) {
         Line::from(vec![
             Span::styled("  Modelos: ", styles::muted()),
             Span::styled(
-                format!("{} ({})", selection.model_preset.display_name(), selection.model_preset.description()),
+                format!(
+                    "{} ({})",
+                    selection.model_preset.display_name(),
+                    selection.model_preset.description()
+                ),
                 styles::normal(),
             ),
         ]),
@@ -71,7 +75,10 @@ pub fn render(frame: &mut Frame, area: Rect, state: &AppState) {
     }
 
     // Show optimizer actions
-    let has_optimizer_actions = state.optimizers.iter().any(|(_, a, _)| *a != OptimizerAction::Skip);
+    let has_optimizer_actions = state
+        .optimizers
+        .iter()
+        .any(|(_, a, _)| *a != OptimizerAction::Skip);
     if has_optimizer_actions {
         lines.push(Line::styled("", styles::normal()));
         lines.push(Line::styled("  Optimizadores:", styles::subtitle()));

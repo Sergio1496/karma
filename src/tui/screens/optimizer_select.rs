@@ -70,7 +70,10 @@ pub fn render(frame: &mut Frame, area: Rect, state: &AppState) {
                 )
             } else {
                 Line::from(vec![
-                    Span::styled(format!(" {cursor_char} {} {status_label}  ", id.display_name()), style),
+                    Span::styled(
+                        format!(" {cursor_char} {} {status_label}  ", id.display_name()),
+                        style,
+                    ),
                     Span::styled(action_label, action_style),
                     Span::styled(format!("  {}", id.description()), styles::muted()),
                 ])

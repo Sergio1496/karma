@@ -18,18 +18,15 @@ pub fn render(frame: &mut Frame, area: Rect, state: &AppState) {
         .components
         .iter()
         .map(|(id, selected)| {
-            (id.display_name().to_string(), id.description().to_string(), *selected)
+            (
+                id.display_name().to_string(),
+                id.description().to_string(),
+                *selected,
+            )
         })
         .collect();
 
-    widgets::render_selectable_list(
-        frame,
-        chunks[1],
-        "Componentes",
-        &items,
-        state.cursor,
-        true,
-    );
+    widgets::render_selectable_list(frame, chunks[1], "Componentes", &items, state.cursor, true);
 
     widgets::render_footer(
         frame,

@@ -55,11 +55,7 @@ impl Component for PermissionsComponent {
 
         Ok(ApplyResult {
             changed: result.changed,
-            files_written: if result.changed {
-                vec![target]
-            } else {
-                vec![]
-            },
+            files_written: if result.changed { vec![target] } else { vec![] },
             messages: vec!["Security permissions applied".to_string()],
         })
     }

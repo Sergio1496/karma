@@ -154,8 +154,16 @@ mod tests {
     #[test]
     fn test_successful_pipeline() {
         let components: Vec<Box<dyn Component>> = vec![
-            Box::new(MockComponent { id: "a", prepare_ok: true, apply_ok: true }),
-            Box::new(MockComponent { id: "b", prepare_ok: true, apply_ok: true }),
+            Box::new(MockComponent {
+                id: "a",
+                prepare_ok: true,
+                apply_ok: true,
+            }),
+            Box::new(MockComponent {
+                id: "b",
+                prepare_ok: true,
+                apply_ok: true,
+            }),
         ];
 
         let orch = PipelineOrchestrator::new(components);
@@ -172,8 +180,16 @@ mod tests {
     #[test]
     fn test_prepare_failure_skips_apply() {
         let components: Vec<Box<dyn Component>> = vec![
-            Box::new(MockComponent { id: "a", prepare_ok: true, apply_ok: true }),
-            Box::new(MockComponent { id: "b", prepare_ok: false, apply_ok: true }),
+            Box::new(MockComponent {
+                id: "a",
+                prepare_ok: true,
+                apply_ok: true,
+            }),
+            Box::new(MockComponent {
+                id: "b",
+                prepare_ok: false,
+                apply_ok: true,
+            }),
         ];
 
         let orch = PipelineOrchestrator::new(components);
@@ -188,8 +204,16 @@ mod tests {
     #[test]
     fn test_apply_failure_triggers_rollback() {
         let components: Vec<Box<dyn Component>> = vec![
-            Box::new(MockComponent { id: "a", prepare_ok: true, apply_ok: true }),
-            Box::new(MockComponent { id: "b", prepare_ok: true, apply_ok: false }),
+            Box::new(MockComponent {
+                id: "a",
+                prepare_ok: true,
+                apply_ok: true,
+            }),
+            Box::new(MockComponent {
+                id: "b",
+                prepare_ok: true,
+                apply_ok: false,
+            }),
         ];
 
         let orch = PipelineOrchestrator::new(components);
@@ -205,9 +229,11 @@ mod tests {
 
     #[test]
     fn test_dry_run_skips_apply() {
-        let components: Vec<Box<dyn Component>> = vec![
-            Box::new(MockComponent { id: "a", prepare_ok: true, apply_ok: true }),
-        ];
+        let components: Vec<Box<dyn Component>> = vec![Box::new(MockComponent {
+            id: "a",
+            prepare_ok: true,
+            apply_ok: true,
+        })];
 
         let orch = PipelineOrchestrator::new(components);
         let ctx = make_ctx(true);

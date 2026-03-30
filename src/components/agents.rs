@@ -148,10 +148,7 @@ impl Component for AgentsComponent {
     }
 
     fn affected_paths(&self, paths: &ClaudePaths) -> Vec<PathBuf> {
-        ALL_AGENTS
-            .iter()
-            .map(|a| paths.agent_file(a.id))
-            .collect()
+        ALL_AGENTS.iter().map(|a| paths.agent_file(a.id)).collect()
     }
 
     fn prepare(&self, ctx: &PipelineContext) -> Result<()> {
@@ -170,7 +167,9 @@ impl Component for AgentsComponent {
                 ConfigScope::User => ctx.paths.agent_file(agent.id),
                 ConfigScope::Project => {
                     let cwd = std::env::current_dir().unwrap_or_default();
-                    ctx.paths.project_agents_dir(&cwd).join(format!("{}.md", agent.id))
+                    ctx.paths
+                        .project_agents_dir(&cwd)
+                        .join(format!("{}.md", agent.id))
                 }
             };
 
@@ -187,7 +186,10 @@ impl Component for AgentsComponent {
         Ok(ApplyResult {
             changed: any_changed,
             files_written,
-            messages: vec![format!("{} sub-agent definitions installed", ALL_AGENTS.len())],
+            messages: vec![format!(
+                "{} sub-agent definitions installed",
+                ALL_AGENTS.len()
+            )],
         })
     }
 
@@ -288,9 +290,17 @@ mod tests {
         use crate::config::types::ModelPreset;
         let archive = ALL_AGENTS.iter().find(|a| a.id == "sdd-archive").unwrap();
 
-        for preset in &[ModelPreset::Balanced, ModelPreset::Performance, ModelPreset::Economy] {
+        for preset in &[
+            ModelPreset::Balanced,
+            ModelPreset::Performance,
+            ModelPreset::Economy,
+        ] {
             let content = archive.render(preset);
-            assert!(content.contains("model: haiku"), "archive should be haiku in {:?}", preset);
+            assert!(
+                content.contains("model: haiku"),
+                "archive should be haiku in {:?}",
+                preset
+            );
         }
     }
 }

@@ -45,15 +45,24 @@ pub fn render(frame: &mut Frame, area: Rect, state: &AppState) {
         Line::styled("", styles::normal()),
         Line::from(vec![
             Span::styled("    Opus   ", styles::title()),
-            Span::styled("-> Pensamiento profundo: arquitectura, debug, review, refactor", styles::normal()),
+            Span::styled(
+                "-> Pensamiento profundo: arquitectura, debug, review, refactor",
+                styles::normal(),
+            ),
         ]),
         Line::from(vec![
             Span::styled("    Sonnet ", styles::subtitle()),
-            Span::styled("-> Equilibrado: implementacion, specs, tareas, tests", styles::normal()),
+            Span::styled(
+                "-> Equilibrado: implementacion, specs, tareas, tests",
+                styles::normal(),
+            ),
         ]),
         Line::from(vec![
             Span::styled("    Haiku  ", styles::muted()),
-            Span::styled("-> Rapido y barato: docs, git, busquedas, archivar", styles::normal()),
+            Span::styled(
+                "-> Rapido y barato: docs, git, busquedas, archivar",
+                styles::normal(),
+            ),
         ]),
     ];
     frame.render_widget(ratatui::widgets::Paragraph::new(info), chunks[1]);
@@ -61,7 +70,11 @@ pub fn render(frame: &mut Frame, area: Rect, state: &AppState) {
     let items: Vec<(String, String, bool)> = PRESETS
         .iter()
         .map(|(id, name, desc)| {
-            (name.to_string(), desc.to_string(), *id == state.model_preset)
+            (
+                name.to_string(),
+                desc.to_string(),
+                *id == state.model_preset,
+            )
         })
         .collect();
 
@@ -77,7 +90,11 @@ pub fn render(frame: &mut Frame, area: Rect, state: &AppState) {
     widgets::render_footer(
         frame,
         chunks[3],
-        &[("Flechas", "Navegar"), ("Enter", "Seleccionar"), ("Esc", "Atras")],
+        &[
+            ("Flechas", "Navegar"),
+            ("Enter", "Seleccionar"),
+            ("Esc", "Atras"),
+        ],
     );
 }
 
