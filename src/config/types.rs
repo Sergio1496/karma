@@ -15,6 +15,106 @@ pub enum ComponentId {
     ContextIsolation,
     Rtk,
     CodeReviewGraph,
+    BehaviorProfile,
+}
+
+// ── Behavioral Profiles ──
+
+/// Identifier for a behavioral profile that reduces output tokens.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ProfileId {
+    Universal,
+    Coding,
+    Agents,
+    Analysis,
+}
+
+impl ProfileId {
+    pub const ALL: &[ProfileId] = &[
+        ProfileId::Universal,
+        ProfileId::Coding,
+        ProfileId::Agents,
+        ProfileId::Analysis,
+    ];
+
+    pub fn display_name(&self) -> &'static str {
+        match self {
+            ProfileId::Universal => "Universal",
+            ProfileId::Coding => "Coding",
+            ProfileId::Agents => "Agents",
+            ProfileId::Analysis => "Analysis",
+        }
+    }
+
+    pub fn description(&self) -> &'static str {
+        match self {
+            ProfileId::Universal => "Reglas generales de conciseness para cualquier tarea",
+            ProfileId::Coding => "Codigo primero, explicaciones minimas, sin boilerplate",
+            ProfileId::Agents => "Output estructurado (JSON/tablas) para pipelines y bots",
+            ProfileId::Analysis => "Datos primero, hallazgos claros, sin narrativa innecesaria",
+        }
+    }
+
+    /// Asset path for the embedded template.
+    pub fn template_asset(&self) -> &'static str {
+        match self {
+            ProfileId::Universal => "templates/behavior_profile_universal.md",
+            ProfileId::Coding => "templates/behavior_profile_coding.md",
+            ProfileId::Agents => "templates/behavior_profile_agents.md",
+            ProfileId::Analysis => "templates/behavior_profile_analysis.md",
+        }
+    }
+
+    /// Unique signature string embedded in each template for detection.
+    pub fn signature(&self) -> &'static str {
+        match self {
+            ProfileId::Universal => "<!-- profile:universal -->",
+            ProfileId::Coding => "<!-- profile:coding -->",
+            ProfileId::Agents => "<!-- profile:agents -->",
+            ProfileId::Analysis => "<!-- profile:analysis -->",
+        }
+    }
+}
+
+impl fmt::Display for ProfileId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.display_name())
+    }
+}
+
+/// Detection status for a behavioral profile in CLAUDE.md.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BehaviorProfileStatus {
+    /// No profile detected.
+    NotInstalled,
+    /// Installed via karma (has markers).
+    Installed(ProfileId),
+    /// Content detected manually (no karma markers).
+    ManuallyDetected(ProfileId),
+}
+
+impl BehaviorProfileStatus {
+    pub fn label(&self) -> &'static str {
+        match self {
+            BehaviorProfileStatus::NotInstalled => "",
+            BehaviorProfileStatus::Installed(_) => "[karma]",
+            BehaviorProfileStatus::ManuallyDetected(_) => "[manual]",
+        }
+    }
+
+    pub fn installed_profile(&self) -> Option<ProfileId> {
+        match self {
+            BehaviorProfileStatus::NotInstalled => None,
+            BehaviorProfileStatus::Installed(p) | BehaviorProfileStatus::ManuallyDetected(p) => {
+                Some(*p)
+            }
+        }
+    }
+
+    pub fn is_karma_installed(&self) -> bool {
+        matches!(self, BehaviorProfileStatus::Installed(_))
+    }
 }
 
 impl ComponentId {
@@ -54,6 +154,7 @@ impl ComponentId {
             ComponentId::ContextIsolation => "Context Isolation",
             ComponentId::Rtk => "RTK (Token Killer)",
             ComponentId::CodeReviewGraph => "Code Review Graph",
+            ComponentId::BehaviorProfile => "Perfil de Comportamiento",
         }
     }
 
@@ -75,6 +176,9 @@ impl ComponentId {
             ComponentId::Rtk => "Proxy CLI que ahorra 60-90% de tokens en comandos",
             ComponentId::CodeReviewGraph => {
                 "Knowledge graph del codigo, ahorra ~8x tokens en review"
+            }
+            ComponentId::BehaviorProfile => {
+                "Reglas de conciseness que reducen ~63% de tokens de output"
             }
         }
     }
@@ -317,6 +421,8 @@ pub struct Selection {
     pub custom_models: Option<BTreeMap<String, ModelAlias>>,
     pub scope: ConfigScope,
     pub dry_run: bool,
+    /// Behavioral profile to inject into CLAUDE.md (None = skip).
+    pub behavior_profile: Option<ProfileId>,
 }
 
 impl Selection {
@@ -357,6 +463,7 @@ impl Default for Selection {
             custom_models: None,
             scope: ConfigScope::User,
             dry_run: false,
+            behavior_profile: None,
         }
     }
 }

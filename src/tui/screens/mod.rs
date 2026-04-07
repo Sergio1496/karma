@@ -1,3 +1,4 @@
+pub mod behavior_profile_select;
 pub mod component_select;
 pub mod confirm;
 pub mod custom_model_select;

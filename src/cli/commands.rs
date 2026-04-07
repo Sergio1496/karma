@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 
-use crate::config::types::{ComponentId, ConfigScope, ModelPreset, PresetId};
+use crate::config::types::{ComponentId, ConfigScope, ModelPreset, PresetId, ProfileId};
 
 #[derive(Parser)]
 #[command(
@@ -64,6 +64,10 @@ pub struct InstallArgs {
     #[arg(long, value_parser = parse_scope, default_value = "user")]
     pub scope: ConfigScope,
 
+    /// Behavioral profile to inject (universal, coding, agents, analysis)
+    #[arg(long, value_parser = parse_profile)]
+    pub profile: Option<ProfileId>,
+
     /// Preview changes without writing files
     #[arg(long)]
     pub dry_run: bool,
@@ -113,8 +117,9 @@ fn parse_component(s: &str) -> Result<ComponentId, String> {
         "context-isolation" | "isolation" | "ctx-iso" => Ok(ComponentId::ContextIsolation),
         "rtk" => Ok(ComponentId::Rtk),
         "code-review-graph" | "crg" | "graph" => Ok(ComponentId::CodeReviewGraph),
+        "behavior-profile" | "profile" | "bp" => Ok(ComponentId::BehaviorProfile),
         _ => Err(format!(
-            "Unknown component '{s}'. Valid: skills, orchestrator, mcp, permissions, agents, context-isolation, rtk, crg"
+            "Unknown component '{s}'. Valid: skills, orchestrator, mcp, permissions, agents, context-isolation, rtk, crg, behavior-profile"
         )),
     }
 }
@@ -127,6 +132,18 @@ fn parse_model_preset(s: &str) -> Result<ModelPreset, String> {
         "custom" => Ok(ModelPreset::Custom),
         _ => Err(format!(
             "Unknown model preset '{s}'. Valid: balanced, performance, economy, custom"
+        )),
+    }
+}
+
+fn parse_profile(s: &str) -> Result<ProfileId, String> {
+    match s.to_lowercase().as_str() {
+        "universal" => Ok(ProfileId::Universal),
+        "coding" => Ok(ProfileId::Coding),
+        "agents" => Ok(ProfileId::Agents),
+        "analysis" => Ok(ProfileId::Analysis),
+        _ => Err(format!(
+            "Unknown profile '{s}'. Valid: universal, coding, agents, analysis"
         )),
     }
 }

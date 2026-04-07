@@ -3,6 +3,7 @@ use ratatui::text::{Line, Span};
 use ratatui::Frame;
 
 use crate::components::OptimizerAction;
+use crate::config::types::BehaviorProfileStatus;
 use crate::tui::app_state::AppState;
 use crate::tui::styles;
 use crate::tui::widgets;
@@ -99,6 +100,56 @@ pub fn render(frame: &mut Frame, area: Rect, state: &AppState) {
                 OptimizerAction::Skip => {}
             }
         }
+    }
+
+    // Show behavior profile selection
+    if let Some(profile) = state.behavior_profile {
+        lines.push(Line::styled("", styles::normal()));
+        lines.push(Line::styled(
+            "  Perfil de Comportamiento:",
+            styles::subtitle(),
+        ));
+        if state.profile_status == BehaviorProfileStatus::Installed(profile) {
+            lines.push(Line::styled(
+                format!("    = {} (sin cambios)", profile.display_name()),
+                styles::muted(),
+            ));
+        } else {
+            lines.push(Line::styled(
+                format!("    + {}", profile.display_name()),
+                styles::selected(),
+            ));
+        }
+        // Warn about manual duplicates
+        if matches!(state.profile_status, BehaviorProfileStatus::ManuallyDetected(_)) {
+            lines.push(Line::styled(
+                "    ! Se detectaron reglas manuales. Considera eliminar duplicados.",
+                styles::error(),
+            ));
+        }
+    } else if state.profile_status.is_karma_installed() {
+        lines.push(Line::styled("", styles::normal()));
+        lines.push(Line::styled(
+            "  Perfil de Comportamiento:",
+            styles::subtitle(),
+        ));
+        if let Some(p) = state.profile_status.installed_profile() {
+            lines.push(Line::styled(
+                format!("    - Desinstalar: {}", p.display_name()),
+                styles::error(),
+            ));
+        }
+    } else if matches!(state.profile_status, BehaviorProfileStatus::ManuallyDetected(_)) {
+        // Manual profile, user selected "Ninguno" — can't auto-uninstall
+        lines.push(Line::styled("", styles::normal()));
+        lines.push(Line::styled(
+            "  Perfil de Comportamiento:",
+            styles::subtitle(),
+        ));
+        lines.push(Line::styled(
+            "    (manual, no desinstalable automaticamente)",
+            styles::muted(),
+        ));
     }
 
     lines.push(Line::styled("", styles::normal()));

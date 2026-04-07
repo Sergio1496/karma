@@ -86,6 +86,9 @@ fn render(frame: &mut Frame, state: &AppState) {
         Screen::ComponentSelect => screens::component_select::render(frame, area, state),
         Screen::SkillSelect => screens::skill_select::render(frame, area, state),
         Screen::OptimizerSelect => screens::optimizer_select::render(frame, area, state),
+        Screen::BehaviorProfileSelect => {
+            screens::behavior_profile_select::render(frame, area, state)
+        }
         Screen::ScopeSelect => screens::scope_select::render(frame, area, state),
         Screen::Confirm => screens::confirm::render(frame, area, state),
         Screen::Progress => screens::progress::render(frame, area, state),
@@ -218,6 +221,24 @@ fn handle_key(state: &mut AppState, key: KeyCode) -> ScreenAction {
             }
             KeyCode::Left => {
                 state.cycle_optimizer_left();
+                ScreenAction::Continue
+            }
+            KeyCode::Enter => ScreenAction::Next,
+            KeyCode::Esc => ScreenAction::Back,
+            _ => ScreenAction::Continue,
+        },
+
+        Screen::BehaviorProfileSelect => match key {
+            KeyCode::Up => {
+                state.cursor_up();
+                state.behavior_profile =
+                    screens::behavior_profile_select::profile_at(state.cursor);
+                ScreenAction::Continue
+            }
+            KeyCode::Down => {
+                state.cursor_down();
+                state.behavior_profile =
+                    screens::behavior_profile_select::profile_at(state.cursor);
                 ScreenAction::Continue
             }
             KeyCode::Enter => ScreenAction::Next,
@@ -358,6 +379,24 @@ fn execute_pipeline(state: &mut AppState) {
                 }
                 _ => {}
             }
+        }
+    }
+
+    // Handle behavior profile uninstall
+    // If karma-installed profile exists but user selected "Ninguno", remove it
+    if state.behavior_profile.is_none() && state.profile_status.is_karma_installed() {
+        let bp = components::behavior_profile::BehaviorProfileComponent;
+        match bp.uninstall(&ctx) {
+            Ok(r) => {
+                for msg in &r.messages {
+                    state
+                        .progress_messages
+                        .push(format!("[Uninstall] {msg}"));
+                }
+            }
+            Err(e) => state
+                .progress_messages
+                .push(format!("[Uninstall] Behavior Profile error: {e}")),
         }
     }
 

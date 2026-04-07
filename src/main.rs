@@ -66,6 +66,13 @@ fn cmd_install(args: karma::cli::commands::InstallArgs) -> Result<()> {
     // Expand implicit dependencies
     selected_components = planner::expand_dependencies(&selected_components);
 
+    // Auto-include BehaviorProfile component if --profile is specified
+    if args.profile.is_some()
+        && !selected_components.contains(&karma::config::types::ComponentId::BehaviorProfile)
+    {
+        selected_components.push(karma::config::types::ComponentId::BehaviorProfile);
+    }
+
     let selection = Selection {
         components: selected_components,
         skills: args.skill,
@@ -74,6 +81,7 @@ fn cmd_install(args: karma::cli::commands::InstallArgs) -> Result<()> {
         custom_models: None,
         scope: args.scope,
         dry_run: args.dry_run,
+        behavior_profile: args.profile,
     };
 
     // Build execution plan (ordered by dependencies)

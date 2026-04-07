@@ -32,3 +32,9 @@ pub fn default_mcp_context7() -> String {
     get_asset("defaults/mcp/context7.json")
         .expect("embedded asset defaults/mcp/context7.json missing")
 }
+
+/// Get a behavioral profile template by profile ID.
+pub fn behavior_profile_template(profile: &crate::config::types::ProfileId) -> String {
+    let path = profile.template_asset();
+    get_asset(path).unwrap_or_else(|| panic!("embedded asset {path} missing"))
+}

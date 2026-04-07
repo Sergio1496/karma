@@ -22,6 +22,7 @@ const COMPONENT_ORDER: &[ComponentId] = &[
     ComponentId::Permissions,
     ComponentId::McpServers,
     ComponentId::Orchestrator,
+    ComponentId::BehaviorProfile,
     ComponentId::SubAgents,
     ComponentId::Skills,
 ];
@@ -70,6 +71,7 @@ mod tests {
             custom_models: None,
             scope: ConfigScope::User,
             dry_run: false,
+            behavior_profile: None,
         }
     }
 
@@ -101,9 +103,10 @@ mod tests {
 
     #[test]
     fn test_plan_full_preset_order() {
-        // ALL (core) + OPTIMIZERS = everything
+        // ALL (core) + OPTIMIZERS + BehaviorProfile = everything
         let mut all: Vec<ComponentId> = ComponentId::ALL.to_vec();
         all.extend_from_slice(ComponentId::OPTIMIZERS);
+        all.push(ComponentId::BehaviorProfile);
         let sel = selection_with(all);
         let plan = build_plan(&sel);
         assert_eq!(plan.ordered_components, COMPONENT_ORDER.to_vec());

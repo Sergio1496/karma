@@ -2,7 +2,8 @@ use crate::components::{self, OptimizerAction, OptimizerStatus};
 use crate::config::catalog::{self, SkillCatalog, SkillCategory};
 use crate::config::paths::ClaudePaths;
 use crate::config::types::{
-    ComponentId, ConfigScope, ModelAlias, ModelPreset, PresetId, Selection, AGENT_PHASES,
+    BehaviorProfileStatus, ComponentId, ConfigScope, ModelAlias, ModelPreset, PresetId, ProfileId,
+    Selection, AGENT_PHASES,
 };
 use crate::pipeline::stages::ExecutionResult;
 
@@ -16,6 +17,7 @@ pub enum Screen {
     ComponentSelect,
     SkillSelect,
     OptimizerSelect,
+    BehaviorProfileSelect,
     ScopeSelect,
     Confirm,
     Progress,
@@ -46,6 +48,10 @@ pub struct AppState {
     pub custom_models: Vec<ModelAlias>,
     pub progress_messages: Vec<String>,
     pub should_quit: bool,
+    /// Selected behavioral profile (None = skip/ninguno).
+    pub behavior_profile: Option<ProfileId>,
+    /// Detected profile status at startup.
+    pub profile_status: BehaviorProfileStatus,
 }
 
 impl Default for AppState {
@@ -79,6 +85,15 @@ impl AppState {
             })
             .collect();
 
+        let paths = ClaudePaths::detect()
+            .unwrap_or_else(|_| ClaudePaths::with_home(std::path::PathBuf::from(".")));
+
+        let profile_status = components::detect_behavior_profile(&paths);
+        let behavior_profile = match profile_status {
+            BehaviorProfileStatus::Installed(p) => Some(p),
+            _ => None,
+        };
+
         Self {
             screen: Screen::Welcome,
             preset: PresetId::Recommended,
@@ -90,8 +105,6 @@ impl AppState {
                 })
                 .collect(),
             optimizers: {
-                let paths = ClaudePaths::detect()
-                    .unwrap_or_else(|_| ClaudePaths::with_home(std::path::PathBuf::from(".")));
                 ComponentId::OPTIMIZERS
                     .iter()
                     .map(|c| {
@@ -114,6 +127,8 @@ impl AppState {
             execution_result: None,
             progress_messages: Vec::new(),
             should_quit: false,
+            behavior_profile,
+            profile_status,
         }
     }
 
@@ -152,6 +167,13 @@ impl AppState {
             None
         };
 
+        // Add behavior profile component if a profile is selected
+        if self.behavior_profile.is_some()
+            && !components.contains(&ComponentId::BehaviorProfile)
+        {
+            components.push(ComponentId::BehaviorProfile);
+        }
+
         Selection {
             components,
             skills,
@@ -160,6 +182,7 @@ impl AppState {
             custom_models,
             scope: self.scope,
             dry_run: false,
+            behavior_profile: self.behavior_profile,
         }
     }
 
@@ -227,7 +250,8 @@ impl AppState {
                 self.refresh_optimizer_detection();
                 Screen::OptimizerSelect
             }
-            Screen::OptimizerSelect => Screen::Confirm,
+            Screen::OptimizerSelect => Screen::BehaviorProfileSelect,
+            Screen::BehaviorProfileSelect => Screen::Confirm,
             Screen::Confirm => Screen::Progress,
             Screen::Progress => Screen::Result,
             Screen::Result => Screen::Result,
@@ -258,7 +282,8 @@ impl AppState {
                 }
             }
             Screen::OptimizerSelect => Screen::SkillSelect,
-            Screen::Confirm => Screen::OptimizerSelect,
+            Screen::BehaviorProfileSelect => Screen::OptimizerSelect,
+            Screen::Confirm => Screen::BehaviorProfileSelect,
             Screen::Progress => Screen::Confirm,
             Screen::Result => Screen::Result,
         };
@@ -293,6 +318,7 @@ impl AppState {
             Screen::ComponentSelect => self.components.len(),
             Screen::SkillSelect => self.skills.len(),
             Screen::OptimizerSelect => self.optimizers.len(),
+            Screen::BehaviorProfileSelect => ProfileId::ALL.len() + 1, // profiles + "Ninguno"
             Screen::ScopeSelect => 2,
             _ => 0,
         }

@@ -1,4 +1,5 @@
 pub mod agents;
+pub mod behavior_profile;
 pub mod code_review_graph;
 pub mod context_isolation;
 pub mod mcp;
@@ -13,7 +14,7 @@ use anyhow::Result;
 
 use crate::backup::manifest::Manifest;
 use crate::config::paths::ClaudePaths;
-use crate::config::types::{ComponentId, Selection};
+use crate::config::types::{BehaviorProfileStatus, ComponentId, Selection};
 
 /// Result of applying a component's configuration.
 #[derive(Debug)]
@@ -66,6 +67,9 @@ pub fn create_component(id: ComponentId) -> Box<dyn Component> {
         ComponentId::ContextIsolation => Box::new(context_isolation::ContextIsolationComponent),
         ComponentId::Rtk => Box::new(rtk::RtkComponent),
         ComponentId::CodeReviewGraph => Box::new(code_review_graph::CodeReviewGraphComponent),
+        ComponentId::BehaviorProfile => {
+            Box::new(behavior_profile::BehaviorProfileComponent)
+        }
     }
 }
 
@@ -242,6 +246,11 @@ pub fn detect_optimizer(id: ComponentId, paths: &ClaudePaths) -> OptimizerStatus
         }
         _ => OptimizerStatus::NotInstalled,
     }
+}
+
+/// Detect the installation status of a behavioral profile.
+pub fn detect_behavior_profile(paths: &ClaudePaths) -> BehaviorProfileStatus {
+    behavior_profile::detect(paths)
 }
 
 fn file_contains(path: &std::path::Path, needle: &str) -> bool {
