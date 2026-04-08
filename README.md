@@ -208,6 +208,16 @@ assets/
 - **Embedded assets** -- compiled into binary via `rust-embed`
 - **No runtime deps** -- single static binary
 
+## Acknowledgements
+
+Karma builds on ideas, tools, and skills from several projects and people:
+
+- **[Gentle AI](https://github.com/Gentleman-Programming/gentle-ai)** by [Gentleman Programming](https://github.com/Gentleman-Programming) -- Remote skills catalog (branch-pr, issue-creation), SDD workflow methodology, and the sub-agent architecture that inspired Karma's agent system.
+- **[RTK (Rust Token Killer)](https://github.com/Sergio1496/rtk)** -- CLI proxy for token-optimized command output, integrated as an optimizer hook.
+- **[Code Review Graph](https://pypi.org/project/code-review-graph/)** -- Knowledge graph for structural code review, integrated as an MCP server optimizer.
+- **[Context7](https://github.com/upstash/context7)** by [Upstash](https://github.com/upstash) -- MCP server for live framework documentation injection.
+- **[Claude Code](https://docs.anthropic.com/en/docs/claude-code)** by [Anthropic](https://github.com/anthropics) -- The AI coding agent that Karma configures.
+
 ## License
 
 MIT
