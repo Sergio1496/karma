@@ -173,22 +173,16 @@ impl Component for CodeReviewGraphComponent {
             ConfigScope::Project => {
                 messages.push("Configurando code-review-graph en proyecto...".to_string());
 
-                // `code-review-graph install` configures MCP server + hooks
-                let status = Command::new("uvx")
+                // `code-review-graph install` may configure MCP server, but its hook
+                // format is not guaranteed to be valid for Claude Code. We always apply
+                // manual_config afterwards to ensure correct hook structure.
+                let _ = Command::new("uvx")
                     .args(["code-review-graph", "install"])
-                    .status()
-                    .context("Failed to run code-review-graph install")?;
+                    .status();
 
-                if status.success() {
-                    messages.push("MCP server y hooks configurados".to_string());
-                } else {
-                    messages.push(
-                        "Advertencia: code-review-graph install fallo, configurando manualmente..."
-                            .to_string(),
-                    );
-                    // Fallback: manual config
-                    self.manual_config(ctx, &mut messages)?;
-                }
+                // Always write hooks ourselves: ensures { matcher, hooks:[{type,command}] }
+                // format and removes any invalid keys (e.g. PreCommit) the tool may inject.
+                self.manual_config(ctx, &mut messages)?;
 
                 // Build the knowledge graph
                 messages.push("Construyendo knowledge graph del proyecto...".to_string());
@@ -242,18 +236,63 @@ impl CodeReviewGraphComponent {
         writer::write_file_atomic_str(&mcp_path, &merged)?;
         messages.push("MCP configurado manualmente".to_string());
 
-        // Hooks
+        // Hooks — read existing, strip invalid hook keys, then merge our overlay
         let settings_path = self.settings_path(ctx);
         let existing = if settings_path.exists() {
             fs::read_to_string(&settings_path)?
         } else {
             "{}".to_string()
         };
-        let merged = json_merge::merge_json_str(&existing, hooks_overlay)?;
+        let sanitized = Self::sanitize_settings_hooks(&existing);
+        let merged = json_merge::merge_json_str(&sanitized, hooks_overlay)?;
         writer::write_file_atomic_str(&settings_path, &merged)?;
         messages.push("Hooks configurados manualmente".to_string());
 
         Ok(())
+    }
+    /// Remove hook event keys written by third-party tools that are either invalid or
+    /// unreliable (e.g. PreCommit, SessionStart with a status command that fails on
+    /// projects without a built graph). Also fixes entries in the old flat format
+    /// `{matcher, command}` → `{matcher, hooks:[{type,command}]}`.
+    ///
+    /// We intentionally keep only the hook events we actively use so that the settings
+    /// file stays clean even if `code-review-graph install` writes unexpected entries.
+    fn sanitize_settings_hooks(raw: &str) -> String {
+        // Only keep hooks that code-review-graph legitimately needs at tool time.
+        // SessionStart is excluded: `code-review-graph status` errors on projects
+        // that haven't run `build` yet, and it adds no value for our use case.
+        const ALLOWED_HOOK_EVENTS: &[&str] = &["PreToolUse", "PostToolUse"];
+
+        let mut parsed: serde_json::Value =
+            serde_json::from_str(&json_merge::strip_json_comments(raw))
+                .unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
+
+        if let Some(hooks_obj) = parsed.get_mut("hooks").and_then(|h| h.as_object_mut()) {
+            // Drop disallowed event keys
+            hooks_obj.retain(|k, _| ALLOWED_HOOK_EVENTS.contains(&k.as_str()));
+
+            // Fix entries in remaining arrays that use the old flat format
+            for entries in hooks_obj.values_mut() {
+                if let Some(arr) = entries.as_array_mut() {
+                    for entry in arr.iter_mut() {
+                        if let Some(obj) = entry.as_object_mut() {
+                            // Old format: {matcher, command, timeout} — no nested hooks array
+                            if obj.contains_key("command") && !obj.contains_key("hooks") {
+                                let cmd = obj.remove("command").unwrap();
+                                let timeout = obj.remove("timeout");
+                                let mut inner = serde_json::json!({"type": "command", "command": cmd});
+                                if let Some(t) = timeout {
+                                    inner["timeout"] = t;
+                                }
+                                obj.insert("hooks".to_string(), serde_json::json!([inner]));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        serde_json::to_string_pretty(&parsed).unwrap_or_else(|_| raw.to_string())
     }
 }
 
